@@ -1,0 +1,43 @@
+# Node modules
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# Screenshots & temp
+screenshot.png
+screenshot.js
+citycoords_temp.txt
+
+# Old server files (now using backend/server.js)
+server.py
+server_mini.py
+server_simple.py
+server_qweather.py
+server.js
+static_server.py
+weather-proxy.js
+package.json
+package-lock.json
+
+# Temp scripts
+check_cities.py
+filter_cities.py
+gen_city_data.py
+patch_advice.py
+
+# Reports
+定位功能测试报告.md
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# WorkBuddy project data
+.workbuddy/

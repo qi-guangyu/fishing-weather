@@ -313,7 +313,10 @@ html, body {
   <div class="page" id="page-locations">
     <div class="top-bar" style="background:linear-gradient(135deg,#0d9488,#14b8a6)">
       <div class="location"><span>我的钓点</span></div>
-      <div class="actions"><button onclick="showAddLocation()" title="添加"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
+      <div class="actions">
+        <a href="/fishing-spots.html" style="color:#fff;text-decoration:none;font-size:12px;margin-right:12px;opacity:0.85">🌍 发现</a>
+        <button onclick="showAddLocation()" title="添加"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+      </div>
     </div>
     <div class="page-content">
       <div class="location-list" id="location-list"></div>
@@ -343,10 +346,12 @@ html, body {
         <div class="profile-avatar">🎣</div>
         <div class="profile-name">钓鱼爱好者</div>
         <div style="font-size:13px;opacity:0.8;margin-top:4px">登录后可同步钓点数据到云端</div>
-        <div class="login-btn" onclick="showToast('登录功能开发中')"><span>微信登录</span><span style="font-size:18px">›</span></div>
+        <div class="login-btn" onclick="location.href='/login.html'"><span>账号登录</span><span style="font-size:18px">›</span></div>
       </div>
       <div class="menu-list" style="margin-top:-20px;position:relative;z-index:1">
         <div class="menu-item" onclick="switchPage('page-locations')"><div class="mi-icon" style="background:#f0fdfa">📋</div><div class="mi-label">我的钓点</div><div style="margin-left:auto;color:var(--text-light);font-size:12px" id="spot-count">0个钓点</div><div style="color:var(--text-light);font-size:18px;margin-left:8px">›</div></div>
+        <div class="menu-item" onclick="location.href='/fishing-spots.html'"><div class="mi-icon" style="background:#e0f2fe">🌍</div><div class="mi-label">发现更多钓点</div><div style="color:var(--text-light);font-size:18px;margin-left:auto">›</div></div>
+        <div class="menu-item" onclick="location.href='/login.html'"><div class="mi-icon" style="background:#fce7f3">👤</div><div class="mi-label">登录/注册</div><div style="color:var(--text-light);font-size:18px;margin-left:auto">›</div></div>
         <div class="menu-item" onclick="showToast('天气预报以当地气象台为准')"><div class="mi-icon" style="background:#fef3c7">ℹ️</div><div class="mi-label">关于钓鱼气象</div><div style="color:var(--text-light);font-size:18px;margin-left:auto">›</div></div>
         <div class="menu-item" onclick="showToast('清除成功');try{localStorage.clear()}catch(e){}"><div class="mi-icon" style="background:#dbeafe">🗑️</div><div class="mi-label">清除本地数据</div><div style="color:var(--text-light);font-size:18px;margin-left:auto">›</div></div>
       </div>

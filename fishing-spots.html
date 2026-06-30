@@ -101,7 +101,17 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',
   <div class="top-bar">
     <a href="/" class="back-btn">←</a>
     <div class="page-title">钓点探索</div>
-    <a href="/submit-spot.html" style="font-size:12px;color:var(--primary);text-decoration:none">+投稿</a>
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="/login.html" id="loginLink" style="font-size:12px;color:var(--text-secondary);text-decoration:none">登录</a>
+      <span id="userMenu" style="display:none;align-items:center;gap:4px;cursor:pointer;position:relative" onclick="event.stopPropagation();toggleUserMenu()">
+        <span style="font-size:13px;color:var(--text)" id="userNameDisplay"></span>
+        <span style="font-size:10px">▼</span>
+        <div id="userDropdown" style="display:none;position:absolute;top:28px;right:0;background:#1e293b;border:1px solid var(--border);border-radius:10px;padding:8px 0;min-width:120px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.4)">
+          <a href="/submit-spot.html" style="display:block;padding:8px 16px;color:var(--text);text-decoration:none;font-size:13px">+ 投稿钓点</a>
+          <div onclick="logout()" style="padding:8px 16px;color:var(--danger);cursor:pointer;font-size:13px">退出登录</div>
+        </div>
+      </span>
+    </div>
   </div>
 
   <div class="search-bar">
@@ -155,9 +165,53 @@ let searchTimer = null;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
+  checkLoginState();
   loadRegions();
   loadSpots();
   getUserLocation();
+});
+
+async function checkLoginState() {
+  const t = localStorage.getItem('token');
+  if (!t) {
+    document.getElementById('loginLink').style.display = '';
+    document.getElementById('userMenu').style.display = 'none';
+    return;
+  }
+  try {
+    const res = await fetch(API + '/auth/me', { headers: { 'Authorization': 'Bearer ' + t } });
+    if (!res.ok) throw new Error('token invalid');
+    const data = await res.json();
+    if (data.data) {
+      document.getElementById('loginLink').style.display = 'none';
+      document.getElementById('userMenu').style.display = 'flex';
+      document.getElementById('userNameDisplay').textContent = data.data.username || data.data.nickname || '用户';
+      token = t;
+    }
+  } catch(e) {
+    localStorage.removeItem('token');
+    document.getElementById('loginLink').style.display = '';
+    document.getElementById('userMenu').style.display = 'none';
+  }
+}
+
+function toggleUserMenu() {
+  const d = document.getElementById('userDropdown');
+  d.style.display = d.style.display === 'block' ? 'none' : 'block';
+}
+
+function logout() {
+  localStorage.removeItem('token');
+  token = '';
+  location.reload();
+}
+
+// close dropdown on outside click
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('userMenu');
+  if (menu && !menu.contains(e.target)) {
+    document.getElementById('userDropdown').style.display = 'none';
+  }
 });
 
 async function getUserLocation() {
