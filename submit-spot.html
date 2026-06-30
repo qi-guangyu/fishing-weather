@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投稿钓点 - 钓鱼气象</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1a73e8;--bg:#0f172a;--card:rgba(255,255,255,0.08);
+  --text:#f1f5f9;--text-secondary:rgba(241,245,249,0.65);--text-light:rgba(241,245,249,0.4);
+  --border:rgba(255,255,255,0.10);--radius:16px;--radius-sm:10px;
+}
+html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#0a0e1a;color:var(--text);font-size:14px;line-height:1.5}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding:0 0 40px}
+
+.top-bar{display:flex;align-items:center;padding:12px 16px;gap:10px;position:sticky;top:0;z-index:100;background:rgba(10,14,26,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.back-btn{text-decoration:none;color:var(--text);font-size:20px;padding:4px}
+.page-title{font-size:17px;font-weight:700;flex:1;text-align:center}
+
+.form-section{padding:16px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:13px;color:var(--text-secondary);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.form-label .required{color:var(--danger)}
+.form-input,.form-select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px;outline:none;transition:border-color .2s}
+.form-input:focus,.form-select:focus{border-color:var(--primary)}
+.form-textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px;outline:none;resize:vertical;min-height:80px;font-family:inherit}
+
+.form-row{display:flex;gap:10px}
+.form-row .form-group{flex:1}
+
+.checkbox-group{display:flex;flex-wrap:wrap;gap:8px}
+.checkbox-item{padding:8px 16px;border-radius:20px;font-size:13px;border:1px solid var(--border);cursor:pointer;background:var(--card);color:var(--text-secondary);transition:all .2s;user-select:none}
+.checkbox-item.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+.image-upload{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;color:var(--text-light);transition:all .2s}
+.image-upload:hover{border-color:var(--primary);color:var(--primary)}
+.image-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.image-preview-item{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden}
+.image-preview-item img{width:100%;height:100%;object-fit:cover}
+.image-preview-delete{position:absolute;top:2px;right:2px;background:rgba(239,68,68,0.9);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer}
+
+.coords-pick{display:flex;align-items:center;gap:8px}
+.coords-pick button{flex-shrink:0;padding:10px 16px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:13px;cursor:pointer}
+
+.submit-btn{width:100%;padding:14px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-size:16px;font-weight:700;cursor:pointer;margin-top:16px}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed}
+
+.hint{font-size:11px;color:var(--text-light);margin-top:4px}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-light)}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.loading{text-align:center;padding:40px;color:var(--text-light)}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(min-width:431px){.app{border-radius:24px;overflow:hidden;margin-top:20px;min-height:calc(100vh - 40px)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top-bar">
+    <a href="/fishing-spots.html" class="back-btn">←</a>
+    <div class="page-title">投稿新钓点</div>
+    <span></span>
+  </div>
+
+  <div class="form-section">
+    <div class="form-group">
+      <div class="form-label"><span class="required">*</span> 钓点名称</div>
+      <input type="text" class="form-input" id="name" placeholder="请输入钓点名称">
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">地区</div>
+      <div class="form-row">
+        <select class="form-select" id="province" onchange="loadCities()"><option value="">选择省份</option></select>
+        <select class="form-select" id="city" onchange="loadDistricts()"><option value="">选择城市</option></select>
+      </div>
+      <select class="form-select" id="district" style="margin-top:8px"><option value="">选择区县</option></select>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">详细地址</div>
+      <input type="text" class="form-input" id="address" placeholder="如：XX村东侧200米河边">
+    </div>
+
+    <div class="form-group">
+      <div class="form-label"><span class="required">*</span> 经纬度</div>
+      <div class="form-row">
+        <input type="number" step="0.000001" class="form-input" id="latitude" placeholder="纬度">
+        <input type="number" step="0.000001" class="form-input" id="longitude" placeholder="经度">
+      </div>
+      <div class="coords-pick" style="margin-top:8px">
+        <button onclick="getCurrentLocation()">📍 获取当前位置</button>
+        <span class="hint">或手动输入坐标</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">水体类型</div>
+      <div class="checkbox-group" id="waterType">
+        <span class="checkbox-item" data-val="river" onclick="toggleCheck(this)">🌊 河流</span>
+        <span class="checkbox-item" data-val="reservoir" onclick="toggleCheck(this)">🏞️ 水库</span>
+        <span class="checkbox-item" data-val="lake" onclick="toggleCheck(this)">🏔️ 湖泊</span>
+        <span class="checkbox-item" data-val="pond" onclick="toggleCheck(this)">🪣 塘口</span>
+        <span class="checkbox-item" data-val="stream" onclick="toggleCheck(this)">💧 溪流</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">目标鱼种（多选）</div>
+      <div class="checkbox-group" id="targetFish">
+        <span class="checkbox-item" onclick="toggleCheck(this)">鲫鱼</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">鲤鱼</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">草鱼</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">翘嘴</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">白条</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">鳊鱼</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">鲢鳙</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">青鱼</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">罗非</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">黑鱼</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">鳜鱼</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">其他</span>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label">平均水深 (m)</div>
+        <input type="number" step="0.1" class="form-input" id="avgDepth" placeholder="如：2.5">
+      </div>
+      <div class="form-group">
+        <div class="form-label">限竿长度</div>
+        <input type="text" class="form-input" id="rodLimit" placeholder="如：手竿7.2m">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">最佳作钓时段</div>
+      <input type="text" class="form-input" id="bestTime" placeholder="如：清晨5-8点、傍晚16-19点">
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">适钓季节</div>
+      <div class="checkbox-group" id="bestSeason">
+        <span class="checkbox-item" onclick="toggleCheck(this)">🌸 春</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">☀️ 夏</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">🍂 秋</span>
+        <span class="checkbox-item" onclick="toggleCheck(this)">❄️ 冬</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">收费类型</div>
+      <div class="checkbox-group" id="feeType">
+        <span class="checkbox-item" data-val="free" onclick="toggleCheck(this)">💰 免费野钓</span>
+        <span class="checkbox-item" data-val="daily" onclick="toggleCheck(this)">💳 按天收费</span>
+        <span class="checkbox-item" data-val="weight" onclick="toggleCheck(this)">⚖️ 按斤黑坑</span>
+        <span class="checkbox-item" data-val="other" onclick="toggleCheck(this)">📋 其他</span>
+      </div>
+      <input type="text" class="form-input" id="feePrice" placeholder="收费标准（如：100元/天）" style="margin-top:8px">
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">配套设施</div>
+      <div class="checkbox-group">
+        <span class="checkbox-item" data-val="parking" onclick="toggleCheck(this)">🅿️ 有停车</span>
+        <span class="checkbox-item" data-val="restroom" onclick="toggleCheck(this)">🚻 有卫生间</span>
+        <span class="checkbox-item" data-val="shade" onclick="toggleCheck(this)">⛱️ 有遮阳</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">汛期 / 禁钓提示</div>
+      <input type="text" class="form-input" id="floodWarning" placeholder="如：6-8月汛期禁钓">
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">详细描述</div>
+      <textarea class="form-textarea" id="description" placeholder="描述钓点环境、鱼情、注意事项等..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">实拍图片（最多10张）</div>
+      <div class="image-upload" onclick="document.getElementById('spotImages').click()">
+        📷 点击上传图片
+      </div>
+      <input type="file" id="spotImages" accept="image/*" multiple style="display:none" onchange="previewImages()">
+      <div class="image-preview" id="imagePreview"></div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitSpot()">📩 提交审核</button>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin + '/api';
+const token = localStorage.getItem('token') || '';
+let regionTree = [];
+let selectedFiles = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!token) {
+    document.querySelector('.form-section').innerHTML = '<div class="empty-state"><div class="icon">🔒</div><div>请先登录后再投稿钓点</div><a href="/login.html" style="color:var(--primary)">去登录</a></div>';
+    return;
+  }
+  loadRegionTree();
+});
+
+async function loadRegionTree() {
+  try {
+    const res = await fetch(API + '/regions/tree');
+    const data = await res.json();
+    regionTree = data.data || [];
+    const provSelect = document.getElementById('province');
+    for (const p of regionTree) {
+      provSelect.innerHTML += `<option value="${p.id}" data-name="${p.name}">${p.name}</option>`;
+    }
+  } catch(e) { console.warn('地区加载失败'); }
+}
+
+function loadCities() {
+  const provId = document.getElementById('province').value;
+  const prov = regionTree.find(p => p.id === parseInt(provId));
+  const citySelect = document.getElementById('city');
+  citySelect.innerHTML = '<option value="">选择城市</option>';
+  document.getElementById('district').innerHTML = '<option value="">选择区县</option>';
+  if (prov && prov.children) {
+    for (const c of prov.children) {
+      citySelect.innerHTML += `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`;
+    }
+  }
+}
+
+function loadDistricts() {
+  const provId = document.getElementById('province').value;
+  const cityId = document.getElementById('city').value;
+  const prov = regionTree.find(p => p.id === parseInt(provId));
+  const city = prov?.children?.find(c => c.id === parseInt(cityId));
+  const distSelect = document.getElementById('district');
+  distSelect.innerHTML = '<option value="">选择区县</option>';
+  if (city && city.children) {
+    for (const d of city.children) {
+      distSelect.innerHTML += `<option value="${d.id}" data-name="${d.name}">${d.name}</option>`;
+    }
+  }
+}
+
+function toggleCheck(el) {
+  el.classList.toggle('selected');
+}
+
+function previewImages() {
+  const input = document.getElementById('spotImages');
+  const preview = document.getElementById('imagePreview');
+  selectedFiles = Array.from(input.files);
+  let html = '';
+  for (const [i, file] of selectedFiles.entries()) {
+    const url = URL.createObjectURL(file);
+    html += `<div class="image-preview-item">
+      <img src="${url}" alt="preview">
+      <button class="image-preview-delete" onclick="removeImage(${i})">×</button>
+    </div>`;
+  }
+  preview.innerHTML = html;
+}
+
+function removeImage(i) {
+  selectedFiles.splice(i, 1);
+  const dt = new DataTransfer();
+  selectedFiles.forEach(f => dt.items.add(f));
+  document.getElementById('spotImages').files = dt.files;
+  previewImages();
+}
+
+function getCurrentLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        document.getElementById('latitude').value = pos.coords.latitude.toFixed(6);
+        document.getElementById('longitude').value = pos.coords.longitude.toFixed(6);
+      },
+      () => alert('无法获取位置，请手动输入'),
+      { timeout: 10000 }
+    );
+  } else alert('浏览器不支持定位');
+}
+
+function getCheckboxValues(containerId) {
+  const items = document.querySelectorAll(`#${containerId} .checkbox-item.selected`);
+  return Array.from(items).map(el => el.dataset.val || el.textContent.replace(/[^{}\u4e00-\u9fa5\u00c0-\u024f\s]/g,'').trim());
+}
+
+function getCheckboxSingle(containerId) {
+  const items = document.querySelectorAll(`#${containerId} .checkbox-item.selected`);
+  return items.length > 0 ? (items[0].dataset.val || items[0].textContent.replace(/[^{}\u4e00-\u9fa5\u00c0-\u024f\s]/g,'').trim()) : '';
+}
+
+async function submitSpot() {
+  const name = document.getElementById('name').value.trim();
+  const lat = parseFloat(document.getElementById('latitude').value);
+  const lon = parseFloat(document.getElementById('longitude').value);
+
+  if (!name) return alert('请输入钓点名称');
+  if (!lat || !lon) return alert('请输入经纬度坐标');
+
+  const formData = new FormData();
+  formData.append('name', name);
+
+  const provSelect = document.getElementById('province');
+  const citySelect = document.getElementById('city');
+  const distSelect = document.getElementById('district');
+  formData.append('province_id', provSelect.value);
+  formData.append('city_id', citySelect.value);
+  formData.append('district_id', distSelect.value);
+  formData.append('province', provSelect.selectedOptions[0]?.dataset?.name || '');
+  formData.append('city', citySelect.selectedOptions[0]?.dataset?.name || '');
+  formData.append('district', distSelect.selectedOptions[0]?.dataset?.name || '');
+  formData.append('address', document.getElementById('address').value.trim());
+  formData.append('latitude', lat);
+  formData.append('longitude', lon);
+  formData.append('water_type', getCheckboxSingle('waterType'));
+  formData.append('target_fish', getCheckboxValues('targetFish').join('、'));
+  formData.append('avg_depth', document.getElementById('avgDepth').value);
+  formData.append('best_time', document.getElementById('bestTime').value.trim());
+  formData.append('best_season', getCheckboxValues('bestSeason').join('、'));
+  formData.append('fee_type', getCheckboxSingle('feeType'));
+  formData.append('fee_price', document.getElementById('feePrice').value.trim());
+  formData.append('parking', document.querySelector('[data-val="parking"]').classList.contains('selected') ? 1 : 0);
+  formData.append('restroom', document.querySelector('[data-val="restroom"]').classList.contains('selected') ? 1 : 0);
+  formData.append('shade', document.querySelector('[data-val="shade"]').classList.contains('selected') ? 1 : 0);
+  formData.append('rod_limit', document.getElementById('rodLimit').value.trim());
+  formData.append('flood_warning', document.getElementById('floodWarning').value.trim());
+  formData.append('description', document.getElementById('description').value.trim());
+
+  for (const file of selectedFiles) {
+    formData.append('images', file);
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '提交中...';
+
+  try {
+    const res = await fetch(API + '/spots/submit', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData
+    });
+    const data = await res.json();
+    if (data.id) {
+      alert('投稿已提交成功！管理员审核通过后将展示在钓点列表中');
+      location.href = '/fishing-spots.html';
+    } else alert(data.error || '提交失败');
+  } catch(e) { alert('网络错误，请重试'); }
+
+  btn.disabled = false;
+  btn.textContent = '📩 提交审核';
+}
+</script>
+</body>
+</html>

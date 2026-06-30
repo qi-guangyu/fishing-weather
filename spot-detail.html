@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>钓点详情 - 钓鱼气象</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1a73e8;--primary-light:rgba(26,115,232,0.15);--bg:#0f172a;
+  --card:rgba(255,255,255,0.08);--text:#f1f5f9;--text-secondary:rgba(241,245,249,0.65);
+  --text-light:rgba(241,245,249,0.4);--border:rgba(255,255,255,0.10);
+  --radius:16px;--radius-sm:10px;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;
+}
+html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#0a0e1a;color:var(--text);font-size:14px;line-height:1.5}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding:0 0 80px}
+
+.top-bar{display:flex;align-items:center;padding:12px 16px;gap:10px;position:sticky;top:0;z-index:100;background:rgba(10,14,26,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.back-btn{text-decoration:none;color:var(--text);font-size:20px;padding:4px}
+.page-title{font-size:16px;font-weight:700;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.image-carousel{width:100%;height:250px;background:linear-gradient(135deg,#1a3a5c,#0f2740);display:flex;align-items:center;justify-content:center;font-size:50px;position:relative;overflow:hidden}
+.image-carousel img{width:100%;height:100%;object-fit:cover}
+.carousel-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.carousel-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.4)}
+.carousel-dot.active{background:#fff}
+.carousel-nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.5);border:none;color:#fff;font-size:18px;cursor:pointer}
+.carousel-prev{left:8px}.carousel-next{right:8px}
+
+.section{padding:16px;margin-bottom:0}
+.section-title{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.info-item{background:var(--card);border-radius:var(--radius-sm);padding:10px 12px;border:1px solid var(--border)}
+.info-label{font-size:11px;color:var(--text-light);margin-bottom:2px}
+.info-value{font-size:14px;font-weight:600;color:var(--text)}
+
+.facility-list{display:flex;flex-wrap:wrap;gap:10px}
+.facility-item{background:var(--card);border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;border:1px solid var(--border);display:flex;align-items:center;gap:6px}
+
+.weather-card{background:linear-gradient(135deg,rgba(26,115,232,0.2),rgba(13,71,161,0.3));border-radius:var(--radius);padding:16px;margin-top:12px;border:1px solid rgba(255,255,255,0.1)}
+.weather-index{text-align:center;margin-bottom:12px}
+.weather-index-num{font-size:48px;font-weight:800;letter-spacing:-2px}
+.weather-index-label{font-size:14px;opacity:0.8}
+.weather-details{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.weather-detail{font-size:12px}
+.weather-detail-val{font-size:16px;font-weight:600;margin-bottom:2px}
+.weather-detail-lbl{color:var(--text-light)}
+
+/* 预报 */
+.forecast-row{display:flex;gap:8px;overflow-x:auto;padding:4px 0;margin-top:12px}
+.forecast-day{flex-shrink:0;background:var(--card);border-radius:var(--radius-sm);padding:12px;text-align:center;min-width:80px;border:1px solid var(--border)}
+.forecast-day-label{font-size:11px;color:var(--text-light);margin-bottom:4px}
+.forecast-day-index{font-size:18px;font-weight:700;margin-bottom:2px}
+.forecast-day-time{font-size:10px;color:var(--text-light)}
+
+/* TAB */
+.tab-bar{display:flex;border-bottom:1px solid var(--border);position:sticky;top:48px;background:rgba(10,14,26,0.95);z-index:50}
+.tab-btn{flex:1;text-align:center;padding:12px;font-size:14px;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+
+.tab-content{display:none;padding:16px}
+.tab-content.active{display:block}
+
+/* 渔获卡片 */
+.catch-card{background:var(--card);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:1px solid var(--border);display:flex;gap:12px}
+.catch-img{width:60px;height:60px;border-radius:8px;background:rgba(255,255,255,0.05);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden}
+.catch-img img{width:100%;height:100%;object-fit:cover}
+.catch-body{flex:1}
+.catch-user{font-size:13px;font-weight:600;margin-bottom:2px}
+.catch-feeling{font-size:13px;color:var(--text-secondary);margin-bottom:4px}
+.catch-meta{font-size:11px;color:var(--text-light);display:flex;gap:10px}
+
+/* 评论卡片 */
+.comment-card{background:var(--card);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;border:1px solid var(--border)}
+.comment-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.comment-user{font-size:13px;font-weight:600}
+.comment-time{font-size:11px;color:var(--text-light)}
+.comment-content{font-size:13px;color:var(--text);line-height:1.6}
+.comment-img{margin-top:8px;max-width:100%;border-radius:8px;max-height:200px}
+
+/* 操作按钮 */
+.action-bar{display:flex;gap:8px;padding:12px 0;flex-wrap:wrap}
+.action-btn{flex:1;min-width:60px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;cursor:pointer;text-align:center;transition:all .2s}
+.action-btn:active{transform:scale(0.95)}
+.action-btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.action-btn.fav{background:rgba(239,68,68,0.2);color:#fca5a5;border-color:rgba(239,68,68,0.3)}
+
+/* 输入区域 */
+.compose-box{background:var(--card);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;border:1px solid var(--border)}
+.compose-box textarea{width:100%;border:none;background:none;color:var(--text);font-size:13px;resize:none;outline:none;min-height:60px;font-family:inherit}
+.compose-box textarea::placeholder{color:var(--text-light)}
+.compose-actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px}
+.compose-actions input[type="file"]{display:none}
+.compose-actions label{cursor:pointer;font-size:20px}
+.compose-actions button{padding:8px 20px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+
+.login-hint{text-align:center;padding:20px;color:var(--text-secondary)}
+.login-hint a{color:var(--primary)}
+
+.loading{text-align:center;padding:40px;color:var(--text-light)}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 弹窗 */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:rgba(0,0,0,0.5)}
+.modal-overlay.show{display:flex;align-items:flex-end;justify-content:center}
+.modal-panel{width:100%;max-width:430px;background:#1e293b;border-radius:20px 20px 0 0;max-height:60vh;overflow-y:auto;padding:20px}
+.modal-panel h3{margin-bottom:12px;text-align:center}
+.modal-panel textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--card);color:var(--text);font-size:13px;min-height:80px;resize:none;font-family:inherit}
+.modal-panel button{margin-top:12px;width:100%;padding:12px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+
+@media(min-width:431px){.app{border-radius:24px;overflow:hidden;margin-top:20px;min-height:calc(100vh - 40px)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top-bar">
+    <a href="/fishing-spots.html" class="back-btn">←</a>
+    <div class="page-title" id="spotTitle">钓点详情</div>
+    <span style="cursor:pointer;font-size:18px" onclick="shareSpot()">🔗</span>
+  </div>
+
+  <div class="image-carousel" id="imageCarousel">
+    <div id="carouselImages">🎣</div>
+    <div class="carousel-nav carousel-prev" onclick="prevImage()">‹</div>
+    <div class="carousel-nav carousel-next" onclick="nextImage()">›</div>
+    <div class="carousel-dots" id="carouselDots"></div>
+  </div>
+
+  <div class="section" id="spotInfo">
+    <div class="loading"><div class="spinner"></div><div>加载中...</div></div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab-btn active" onclick="switchTab('info')">📋 基础信息</div>
+    <div class="tab-btn" onclick="switchTab('weather')">🌤️ 气象</div>
+    <div class="tab-btn" onclick="switchTab('catches')">🐟 渔获</div>
+    <div class="tab-btn" onclick="switchTab('comments')">💬 评论</div>
+  </div>
+
+  <div class="tab-content active" id="tab-info" style="display:block">
+    <div class="section" id="basicInfo"></div>
+    <div class="action-bar">
+      <button class="action-btn fav" id="favBtn" onclick="toggleFav()">🤍 收藏</button>
+      <button class="action-btn" onclick="navigateTo()">🧭 导航</button>
+      <button class="action-btn" onclick="reportSpot()">🚩 举报</button>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-weather">
+    <div class="section" id="weatherContent">
+      <div class="loading"><div class="spinner"></div><div>获取气象数据...</div></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-catches">
+    <div class="section">
+      <div id="catchCompose">
+        <div class="compose-box">
+          <textarea placeholder="分享你的渔获...（重量、感受）" id="catchContent"></textarea>
+          <div class="compose-actions">
+            <input type="file" id="catchImage" accept="image/*">
+            <label for="catchImage">📷</label>
+            <div><input type="text" placeholder="重量(斤)" id="catchWeight" style="width:70px;border:1px solid var(--border);border-radius:6px;padding:6px;background:var(--card);color:var(--text);font-size:12px;text-align:center"></div>
+            <button onclick="postCatch()">发布</button>
+          </div>
+        </div>
+      </div>
+      <div id="catchList"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-comments">
+    <div class="section">
+      <div id="commentCompose">
+        <div class="compose-box">
+          <textarea placeholder="分享路况、鱼情、避坑提醒..." id="commentContent"></textarea>
+          <div class="compose-actions">
+            <input type="file" id="commentImage" accept="image/*">
+            <label for="commentImage">📷</label>
+            <button onclick="postComment()">评论</button>
+          </div>
+        </div>
+      </div>
+      <div id="commentList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 举报弹窗 -->
+<div class="modal-overlay" id="reportModal" onclick="if(event.target===this)closeReport()">
+  <div class="modal-panel">
+    <h3>🚩 举报</h3>
+    <textarea placeholder="请描述举报原因..." id="reportReason"></textarea>
+    <button onclick="submitReport()">提交举报</button>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin + '/api';
+const token = localStorage.getItem('token') || '';
+const spotId = new URLSearchParams(window.location.search).get('id');
+let spotData = null;
+let currentTab = 'info';
+let favStatus = false;
+let carouselIdx = 0;
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!spotId) { document.getElementById('spotInfo').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><div>缺少钓点ID参数</div></div>'; return; }
+  loadSpot();
+  // 检查登录状态
+  if (!token) {
+    document.getElementById('catchCompose').innerHTML = '<div class="login-hint">🔒 <a href="/login.html">登录</a>后即可发布渔获和评论</div>';
+    document.getElementById('commentCompose').innerHTML = '<div class="login-hint">🔒 <a href="/login.html">登录</a>后即可发表评论</div>';
+  }
+});
+
+async function loadSpot() {
+  try {
+    const res = await fetch(API + '/spots/' + spotId);
+    const result = await res.json();
+    if (!result.data) throw new Error('钓点不存在');
+    spotData = result.data;
+    renderSpot();
+    loadCatches();
+    loadComments();
+  } catch(e) {
+    document.getElementById('spotInfo').innerHTML = '<div class="empty-state"><div class="icon">🔍</div><div>钓点不存在或已下架</div></div>';
+  }
+}
+
+function renderSpot() {
+  const s = spotData;
+  document.getElementById('spotTitle').textContent = s.name;
+  document.title = s.name + ' - 钓点详情';
+
+  // 图片轮播
+  const images = safeJSON(s.images);
+  const carouselImages = document.getElementById('carouselImages');
+  const carouselDots = document.getElementById('carouselDots');
+  if (images.length > 0) {
+    carouselImages.innerHTML = `<img src="${images[0]}" alt="${s.name}" id="carouselImg">`;
+    let dotsHtml = '';
+    for (let i = 0; i < images.length; i++) {
+      dotsHtml += `<div class="carousel-dot${i === 0 ? ' active' : ''}" onclick="gotoImage(${i})"></div>`;
+    }
+    carouselDots.innerHTML = dotsHtml;
+  }
+
+  // 基础信息
+  const feeLabel = {'free':'免费野钓','daily':'按天收费','weight':'按斤黑坑','other':'其他'}[s.fee_type] || '--';
+  const waterLabel = {'river':'河流','reservoir':'水库','lake':'湖泊','pond':'塘口','stream':'溪流'}[s.water_type] || '--';
+
+  document.getElementById('basicInfo').innerHTML = `
+    <div class="section-title">📍 基本信息</div>
+    <div class="info-grid">
+      <div class="info-item"><div class="info-label">完整地址</div><div class="info-value">${s.province||''} ${s.city||''} ${s.district||''} ${s.address||''}</div></div>
+      <div class="info-item"><div class="info-label">水体类型</div><div class="info-value">${waterLabel}</div></div>
+      <div class="info-item"><div class="info-label">目标鱼种</div><div class="info-value">${s.target_fish || '--'}</div></div>
+      <div class="info-item"><div class="info-label">平均水深</div><div class="info-value">${s.avg_depth ? s.avg_depth+'m' : '--'}</div></div>
+      <div class="info-item"><div class="info-label">最佳时段</div><div class="info-value">${s.best_time || '--'}</div></div>
+      <div class="info-item"><div class="info-label">适钓季节</div><div class="info-value">${s.best_season || '--'}</div></div>
+      <div class="info-item"><div class="info-label">收费类型</div><div class="info-value">${feeLabel} ${s.fee_price||''}</div></div>
+      <div class="info-item"><div class="info-label">限竿要求</div><div class="info-value">${s.rod_limit || '无'}</div></div>
+    </div>
+    <div class="section-title">🚗 配套设施</div>
+    <div class="facility-list">
+      <div class="facility-item">🅿️ ${s.parking ? '有停车位' : '无停车'}</div>
+      <div class="facility-item">🚻 ${s.restroom ? '有卫生间' : '无卫生间'}</div>
+      <div class="facility-item">⛱️ ${s.shade ? '有遮阳' : '无遮阳'}</div>
+    </div>
+    ${s.flood_warning ? `<div style="margin-top:12px;padding:10px;border-radius:8px;background:rgba(245,158,11,0.15);color:#fcd34d;font-size:12px">⚠️ ${s.flood_warning}</div>` : ''}
+    ${s.description ? `<div style="margin-top:12px;font-size:13px;color:var(--text-secondary);line-height:1.6">${s.description}</div>` : ''}
+
+    <div class="weather-card" style="margin-top:16px">
+      <div class="section-title">🌤️ 实时垂钓指数</div>
+      <div class="weather-index">
+        <div class="weather-index-num" style="color:${s.fishing_index >= 75 ? '#6ee7b7' : s.fishing_index >= 60 ? '#93c5fd' : s.fishing_index >= 40 ? '#fcd34d' : '#fca5a5'}">${s.fishing_index || 50}</div>
+        <div class="weather-index-label">${s.fishing_index >= 75 ? '🏆 优' : s.fishing_index >= 60 ? '👍 良' : s.fishing_index >= 40 ? '👌 一般' : '👎 不适宜'}</div>
+      </div>
+      ${renderWeatherDetails(s.weather_data)}
+    </div>
+  `;
+
+  // 收藏状态
+  document.getElementById('favBtn').onclick = toggleFav;
+}
+
+function renderWeatherDetails(wd) {
+  const w = safeJSON(wd);
+  if (!w || !w.temperature) return '<div style="text-align:center;color:var(--text-light);font-size:12px">气象数据获取中...</div>';
+  return `<div class="weather-details">
+    <div class="weather-detail"><div class="weather-detail-val">${w.temperature}℃</div><div class="weather-detail-lbl">气温</div></div>
+    <div class="weather-detail"><div class="weather-detail-val">${w.pressure}hPa</div><div class="weather-detail-lbl">气压</div></div>
+    <div class="weather-detail"><div class="weather-detail-val">${w.humidity}%</div><div class="weather-detail-lbl">湿度</div></div>
+    <div class="weather-detail"><div class="weather-detail-val">${w.wind_power||'--'}</div><div class="weather-detail-lbl">风力</div></div>
+    <div class="weather-detail"><div class="weather-detail-val">${w.precipitation||0}mm</div><div class="weather-detail-lbl">降水</div></div>
+    <div class="weather-detail"><div class="weather-detail-val">${w.weather||'--'}</div><div class="weather-detail-lbl">天气</div></div>
+  </div>`;
+}
+
+// 渔获
+async function loadCatches() {
+  const el = document.getElementById('catchList');
+  try {
+    const res = await fetch(API + '/spots/' + spotId + '/catches?page=1&size=20');
+    const result = await res.json();
+    const catches = result.data || [];
+    if (!catches.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:20px">🐟 还没有人分享渔获，快来首开记录吧！</div>';
+    } else {
+      let html = '';
+      for (const c of catches) {
+        html += `<div class="catch-card">
+          <div class="catch-img">${c.image ? `<img src="${c.image}" alt="">` : '🐟'}</div>
+          <div class="catch-body">
+            <div class="catch-user">${c.nickname || '匿名'} ${c.weight ? '· ' + c.weight + '斤' : ''}</div>
+            <div class="catch-feeling">${c.feeling || ''}</div>
+            <div class="catch-meta"><span>${formatTime(c.created_at)}</span></div>
+          </div>
+        </div>`;
+      }
+      el.innerHTML = html;
+    }
+  } catch(e) { el.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:20px">加载失败</div>'; }
+}
+
+async function postCatch() {
+  if (!token) return alert('请先登录');
+  const feeling = document.getElementById('catchContent').value.trim();
+  const weight = document.getElementById('catchWeight').value;
+  if (!feeling) return alert('请填写渔获感受');
+
+  const formData = new FormData();
+  formData.append('feeling', feeling);
+  if (weight) formData.append('weight', weight);
+  const imgFile = document.getElementById('catchImage').files[0];
+  if (imgFile) formData.append('image', imgFile);
+
+  try {
+    const res = await fetch(API + '/spots/' + spotId + '/catches', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData
+    });
+    const data = await res.json();
+    if (data.id) {
+      document.getElementById('catchContent').value = '';
+      document.getElementById('catchWeight').value = '';
+      document.getElementById('catchImage').value = '';
+      loadCatches();
+    } else alert(data.error || '发布失败');
+  } catch(e) { alert('网络错误'); }
+}
+
+// 评论
+async function loadComments() {
+  const el = document.getElementById('commentList');
+  try {
+    const res = await fetch(API + '/spots/' + spotId + '/comments?page=1&size=30');
+    const result = await res.json();
+    const comments = result.data || [];
+    if (!comments.length) {
+      el.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:20px">💬 暂无评论，来坐沙发吧！</div>';
+    } else {
+      let html = '';
+      for (const c of comments) {
+        html += `<div class="comment-card">
+          <div class="comment-header"><span class="comment-user">${c.nickname || '匿名'}</span><span class="comment-time">${formatTime(c.created_at)}</span></div>
+          <div class="comment-content">${c.content}</div>
+          ${c.image ? `<img src="${c.image}" class="comment-img" alt="">` : ''}
+        </div>`;
+      }
+      el.innerHTML = html;
+    }
+  } catch(e) { el.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:20px">加载失败</div>'; }
+}
+
+async function postComment() {
+  if (!token) return alert('请先登录');
+  const content = document.getElementById('commentContent').value.trim();
+  if (!content) return alert('请输入评论内容');
+
+  const formData = new FormData();
+  formData.append('content', content);
+  const imgFile = document.getElementById('commentImage').files[0];
+  if (imgFile) formData.append('image', imgFile);
+
+  try {
+    const res = await fetch(API + '/spots/' + spotId + '/comments', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData
+    });
+    const data = await res.json();
+    if (data.id) {
+      document.getElementById('commentContent').value = '';
+      document.getElementById('commentImage').value = '';
+      loadComments();
+    } else alert(data.error || '评论失败');
+  } catch(e) { alert('网络错误'); }
+}
+
+// 收藏
+async function toggleFav() {
+  if (!token) return alert('请先登录');
+  try {
+    const res = await fetch(API + '/spots/' + spotId + '/favorite', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    favStatus = data.favorited;
+    document.getElementById('favBtn').textContent = favStatus ? '❤️ 已收藏' : '🤍 收藏';
+  } catch(e) {}
+}
+
+// 导航
+function navigateTo() {
+  if (!spotData) return;
+  const url = `https://uri.amap.com/navigation?to=${spotData.longitude},${spotData.latitude},${spotData.name}`;
+  window.open(url, '_blank');
+}
+
+// 举报
+function reportSpot() { document.getElementById('reportModal').classList.add('show'); }
+function closeReport() { document.getElementById('reportModal').classList.remove('show'); }
+async function submitReport() {
+  if (!token) return alert('请先登录');
+  const reason = document.getElementById('reportReason').value.trim();
+  if (!reason) return alert('请填写举报原因');
+  try {
+    await fetch(API + '/reports', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ target_type: 'spot', target_id: spotId, reason })
+    });
+    alert('举报已提交');
+    closeReport();
+  } catch(e) { alert('提交失败'); }
+}
+
+function shareSpot() {
+  if (navigator.share) {
+    navigator.share({ title: spotData?.name || '钓点', url: location.href });
+  } else {
+    navigator.clipboard.writeText(location.href).then(() => alert('链接已复制'));
+  }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.tab-btn:nth-child(${{info:1,weather:2,catches:3,comments:4}[tab]})`).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'weather') renderWeatherTab();
+}
+
+function renderWeatherTab() {
+  const el = document.getElementById('weatherContent');
+  const w = safeJSON(spotData.weather_data);
+  if (!w || !w.temperature) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:20px">⏳ 气象数据获取中...</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div class="weather-card">
+      <div class="section-title">🌤️ 实时垂钓指数</div>
+      <div class="weather-index">
+        <div class="weather-index-num" style="color:${spotData.fishing_index>=75?'#6ee7b7':spotData.fishing_index>=60?'#93c5fd':spotData.fishing_index>=40?'#fcd34d':'#fca5a5'}">${spotData.fishing_index||50}</div>
+        <div class="weather-index-label">${spotData.fishing_index>=75?'🏆 优质':spotData.fishing_index>=60?'👍 良好':spotData.fishing_index>=40?'👌 一般':'👎 不适宜'}</div>
+      </div>
+      ${renderWeatherDetails(spotData.weather_data)}
+    </div>
+    <div style="margin-top:16px;font-size:13px;color:var(--text-secondary);text-align:center">
+      <p>💡 指数规则：气压995-1020hPa + 风力≤3级 + 无降雨 + 温差＜6℃ = 优质</p>
+      <p style="margin-top:4px">数据每小时自动更新 | 观测时间：${w.obs_time || '--'}</p>
+    </div>
+  `;
+}
+
+// 图片轮播
+function prevImage() {
+  const images = safeJSON(spotData?.images);
+  if (images.length < 2) return;
+  carouselIdx = (carouselIdx - 1 + images.length) % images.length;
+  updateCarousel();
+}
+function nextImage() {
+  const images = safeJSON(spotData?.images);
+  if (images.length < 2) return;
+  carouselIdx = (carouselIdx + 1) % images.length;
+  updateCarousel();
+}
+function gotoImage(i) { carouselIdx = i; updateCarousel(); }
+function updateCarousel() {
+  const images = safeJSON(spotData?.images);
+  document.getElementById('carouselImg').src = images[carouselIdx];
+  document.querySelectorAll('.carousel-dot').forEach((d,i) => d.classList.toggle('active', i === carouselIdx));
+}
+
+function formatTime(t) {
+  if (!t) return '';
+  const d = new Date(t);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff/60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff/3600000) + '小时前';
+  return d.getMonth()+1 + '/' + d.getDate();
+}
+
+function safeJSON(str) {
+  try { return typeof str === 'string' ? JSON.parse(str) : (str || {}); } catch(e) { return {}; }
+}
+</script>
+</body>
+</html>

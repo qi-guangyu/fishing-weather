@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>钓点 - 钓鱼气象</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1a73e8;--primary-light:rgba(26,115,232,0.15);--bg:#0f172a;
+  --card:rgba(255,255,255,0.08);--card-hover:rgba(255,255,255,0.12);
+  --text:#f1f5f9;--text-secondary:rgba(241,245,249,0.65);--text-light:rgba(241,245,249,0.4);
+  --border:rgba(255,255,255,0.10);--radius:16px;--radius-sm:10px;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;
+}
+html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#0a0e1a;color:var(--text);font-size:14px;line-height:1.5}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding:0 0 80px}
+.top-bar{display:flex;align-items:center;padding:12px 16px;gap:10px;position:sticky;top:0;z-index:100;background:rgba(10,14,26,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.back-btn{text-decoration:none;color:var(--text);font-size:20px;padding:4px}
+.page-title{font-size:17px;font-weight:700;flex:1;text-align:center}
+
+.search-bar{padding:8px 16px}
+.search-input-wrap{display:flex;align-items:center;background:var(--card);border-radius:20px;padding:8px 16px;gap:8px;border:1px solid var(--border)}
+.search-input-wrap input{flex:1;border:none;background:none;color:var(--text);font-size:14px;outline:none}
+.search-input-wrap input::placeholder{color:var(--text-light)}
+
+.filters{padding:4px 16px 8px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:wrap}
+.filter-tag{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:13px;background:var(--card);color:var(--text-secondary);cursor:pointer;border:1px solid var(--border);white-space:nowrap;transition:all .2s}
+.filter-tag.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.filter-tag:active{transform:scale(0.95)}
+
+.sort-bar{display:flex;gap:0;padding:0 16px 8px;border-bottom:1px solid var(--border)}
+.sort-btn{flex:1;text-align:center;padding:8px 0;font-size:13px;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.sort-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+.sort-btn.nearest{color:#f59e0b}
+.sort-btn.nearest.active{border-bottom-color:#f59e0b}
+
+.view-toggle{display:flex;justify-content:flex-end;padding:0 16px 8px;gap:4px}
+.view-btn{padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;background:var(--card);color:var(--text-secondary);border:1px solid var(--border);transition:all .2s}
+.view-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+.spot-list{padding:0 16px}
+.spot-card{background:var(--card);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:all .2s}
+.spot-card:active{transform:scale(0.98);background:var(--card-hover)}
+.spot-thumb{width:100%;height:160px;background:linear-gradient(135deg,#1a3a5c,#0f2740);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;overflow:hidden}
+.spot-thumb img{width:100%;height:100%;object-fit:cover}
+.spot-tag-row{position:absolute;top:8px;left:8px;display:flex;gap:4px}
+.spot-tag{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.spot-tag.free{background:rgba(16,185,129,0.9);color:#fff}
+.spot-tag.daily{background:rgba(26,115,232,0.9);color:#fff}
+.spot-tag.weight{background:rgba(245,158,11,0.9);color:#fff}
+.spot-fav{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer}
+.spot-body{padding:12px 14px}
+.spot-name{font-size:16px;font-weight:700;margin-bottom:4px;color:var(--text)}
+.spot-addr{font-size:12px;color:var(--text-secondary);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.spot-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.spot-meta-item{font-size:11px;color:var(--text-light);display:flex;align-items:center;gap:3px}
+.spot-footer{display:flex;justify-content:space-between;align-items:center}
+.spot-index{display:flex;align-items:center;gap:4px}
+.index-badge{padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.index-badge.excellent{background:rgba(16,185,129,0.2);color:#6ee7b7}
+.index-badge.good{background:rgba(26,115,232,0.2);color:#93c5fd}
+.index-badge.normal{background:rgba(245,158,11,0.2);color:#fcd34d}
+.index-badge.bad{background:rgba(239,68,68,0.2);color:#fca5a5}
+.spot-stats{font-size:11px;color:var(--text-light);display:flex;gap:12px}
+
+.map-container{display:none;width:100%;height:calc(100vh - 300px);background:rgba(255,255,255,0.03);border-radius:var(--radius);margin:0 16px 12px;overflow:hidden}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-light)}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.pagination{display:flex;justify-content:center;align-items:center;gap:8px;padding:16px}
+.pagination button{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:13px}
+.pagination button:disabled{opacity:0.4;cursor:not-allowed}
+.pagination .current{font-size:13px;color:var(--text-secondary)}
+
+/* 筛选弹窗 */
+.filter-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:rgba(0,0,0,0.5)}
+.filter-modal.show{display:flex;align-items:flex-end;justify-content:center}
+.filter-panel{width:100%;max-width:430px;background:#1e293b;border-radius:20px 20px 0 0;max-height:70vh;overflow-y:auto;padding:20px}
+.filter-panel h3{font-size:16px;margin-bottom:16px;text-align:center}
+.filter-section{margin-bottom:16px}
+.filter-section-label{font-size:13px;color:var(--text-secondary);margin-bottom:8px}
+.filter-options{display:flex;flex-wrap:wrap;gap:8px}
+.filter-option{padding:8px 16px;border-radius:20px;font-size:13px;border:1px solid var(--border);cursor:pointer;color:var(--text-secondary);transition:all .2s}
+.filter-option.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.filter-actions{display:flex;gap:12px;margin-top:16px}
+.filter-actions button{flex:1;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none}
+.filter-actions .reset{background:var(--card);color:var(--text)}
+.filter-actions .apply{background:var(--primary);color:#fff}
+
+.loading{text-align:center;padding:40px;color:var(--text-light)}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 移动端响应式 */
+@media (min-width:431px){.app{border-radius:24px;overflow:hidden;margin-top:20px;min-height:calc(100vh - 40px)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top-bar">
+    <a href="/" class="back-btn">←</a>
+    <div class="page-title">钓点探索</div>
+    <a href="/submit-spot.html" style="font-size:12px;color:var(--primary);text-decoration:none">+投稿</a>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-input-wrap">
+      <span>🔍</span>
+      <input type="text" placeholder="搜索钓点名称或地址..." id="searchInput" onkeyup="debounceSearch()">
+    </div>
+  </div>
+
+  <div class="filters" id="filterBar">
+    <div class="filter-tag active" onclick="openFilterModal('region')">📍 地区</div>
+    <div class="filter-tag" onclick="openFilterModal('fish')">🐟 鱼种</div>
+    <div class="filter-tag" onclick="openFilterModal('fee')">💰 收费</div>
+    <div class="filter-tag" onclick="openFilterModal('water')">🌊 水体</div>
+    <div class="filter-tag" onclick="openFilterModal('index')">📊 指数</div>
+  </div>
+
+  <div class="sort-bar">
+    <div class="sort-btn nearest" onclick="setSort('nearest')">🗺️ 最近</div>
+    <div class="sort-btn active" onclick="setSort('latest')">🆕 最新</div>
+    <div class="sort-btn" onclick="setSort('favorites')">⭐ 收藏</div>
+    <div class="sort-btn" onclick="setSort('comments')">💬 评论</div>
+  </div>
+
+  <div class="view-toggle">
+    <div class="view-btn active" onclick="toggleView('list')">📋 列表</div>
+    <div class="view-btn" onclick="toggleView('map')">🗺️ 地图</div>
+  </div>
+
+  <div class="spot-list" id="spotList"></div>
+  <div class="map-container" id="mapContainer"></div>
+
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- 筛选弹窗 -->
+<div class="filter-modal" id="filterModal" onclick="if(event.target===this)closeFilterModal()">
+  <div class="filter-panel" id="filterPanel"></div>
+</div>
+
+<script>
+const API = window.location.origin + '/api';
+let token = localStorage.getItem('token') || '';
+let currentFilters = {};
+let currentSort = 'latest';
+let currentPage = 1;
+let currentView = 'list';
+let userLat = null, userLon = null;
+let filterData = { regions: [], provinces: [], cities: [], districts: [] };
+let searchTimer = null;
+
+// 初始化
+document.addEventListener('DOMContentLoaded', () => {
+  loadRegions();
+  loadSpots();
+  getUserLocation();
+});
+
+async function getUserLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => { userLat = pos.coords.latitude; userLon = pos.coords.longitude; },
+      () => {},
+      { timeout: 5000, enableHighAccuracy: false }
+    );
+  }
+}
+
+// 地区数据
+async function loadRegions() {
+  try {
+    const res = await fetch(API + '/regions');
+    const data = await res.json();
+    if (data.data) {
+      filterData.provinces = data.data.filter(r => r.level === 'province');
+      filterData.regions = data.data;
+    }
+    // 同时加载树形数据
+    const treeRes = await fetch(API + '/regions/tree');
+    const treeData = await treeRes.json();
+    if (treeData.data) filterData.tree = treeData.data;
+  } catch(e) { console.warn('地区数据加载失败'); }
+}
+
+// 加载钓点列表
+async function loadSpots() {
+  const listEl = document.getElementById('spotList');
+  listEl.innerHTML = '<div class="loading"><div class="spinner"></div><div>加载中...</div></div>';
+
+  const params = new URLSearchParams({ page: currentPage, size: 20, sort: currentSort, ...currentFilters });
+  if (currentSort === 'nearest' && userLat && userLon) {
+    params.set('lat', userLat); params.set('lon', userLon);
+  }
+  const keyword = document.getElementById('searchInput').value.trim();
+  if (keyword) params.set('keyword', keyword);
+
+  try {
+    const res = await fetch(API + '/spots?' + params.toString());
+    const result = await res.json();
+    renderSpots(result.data || [], result.pagination);
+  } catch(e) {
+    listEl.innerHTML = '<div class="empty-state"><div class="icon">📡</div><div>网络连接失败，请确保后端服务已启动</div></div>';
+  }
+}
+
+function renderSpots(spots, pagination) {
+  const listEl = document.getElementById('spotList');
+  if (!spots.length) {
+    listEl.innerHTML = '<div class="empty-state"><div class="icon">🎣</div><div>暂无钓点，快来添加第一个吧！</div></div>';
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  let html = '';
+  for (const s of spots) {
+    const images = safeJSON(s.images);
+    const thumbSrc = images.length > 0 ? images[0] : '';
+    const feeTag = s.fee_type === 'free' ? '免费' : s.fee_type === 'daily' ? '按天' : s.fee_type === 'weight' ? '按斤' : '';
+    const feeClass = s.fee_type === 'free' ? 'free' : s.fee_type === 'daily' ? 'daily' : 'weight';
+    const index = s.fishing_index || 50;
+    const idxClass = index >= 75 ? 'excellent' : index >= 60 ? 'good' : index >= 40 ? 'normal' : 'bad';
+    const idxLabel = index >= 75 ? '优' : index >= 60 ? '良' : index >= 40 ? '一般' : '差';
+
+    html += `<div class="spot-card" onclick="location.href='/spot-detail.html?id=${s.id}'">
+      <div class="spot-thumb">
+        ${thumbSrc ? `<img src="${thumbSrc}" alt="${s.name}" onerror="this.style.display='none'">` : '🎣'}
+        <div class="spot-tag-row">
+          ${feeTag ? `<span class="spot-tag ${feeClass}">${feeTag}</span>` : ''}
+          <span class="spot-tag" style="background:rgba(255,255,255,0.2);color:#fff">${s.water_type === 'river' ? '河流' : s.water_type === 'reservoir' ? '水库' : s.water_type === 'lake' ? '湖泊' : s.water_type === 'pond' ? '塘口' : s.water_type === 'stream' ? '溪流' : '--'}</span>
+        </div>
+        <div class="spot-fav" onclick="event.stopPropagation();toggleFav('${s.id}',this)">🤍</div>
+      </div>
+      <div class="spot-body">
+        <div class="spot-name">${s.name}</div>
+        <div class="spot-addr">📍 ${s.district || s.city || ''} ${s.address || ''}</div>
+        ${s.target_fish ? `<div class="spot-meta"><span class="spot-meta-item">🐟 ${s.target_fish}</span></div>` : ''}
+        <div class="spot-footer">
+          <div class="spot-index">
+            <span class="index-badge ${idxClass}">${idxLabel} ${index}分</span>
+          </div>
+          <div class="spot-stats">
+            <span>⭐ ${s.favorites_count || 0}</span>
+            <span>💬 ${s.comments_count || 0}</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+  listEl.innerHTML = html;
+
+  // 分页
+  if (pagination) {
+    let pageHtml = '';
+    pageHtml += `<button ${currentPage <= 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">上一页</button>`;
+    pageHtml += `<span class="current">${pagination.page} / ${pagination.totalPages}</span>`;
+    pageHtml += `<button ${currentPage >= pagination.totalPages ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">下一页</button>`;
+    document.getElementById('pagination').innerHTML = pageHtml;
+  }
+}
+
+async function toggleFav(spotId, el) {
+  if (!token) return alert('请先登录');
+  try {
+    const res = await fetch(API + '/spots/' + spotId + '/favorite', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    if (data.favorited) el.textContent = '❤️';
+    else el.textContent = '🤍';
+  } catch(e) {}
+}
+
+function goPage(p) { currentPage = p; loadSpots(); window.scrollTo(0, 0); }
+
+function setSort(sort) {
+  currentSort = sort;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.sort-btn.${sort}`)?.classList.add('active');
+  currentPage = 1;
+  loadSpots();
+}
+
+function toggleView(view) {
+  currentView = view;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.view-btn')[view === 'list' ? 0 : 1].classList.add('active');
+  document.getElementById('spotList').style.display = view === 'list' ? '' : 'none';
+  document.getElementById('mapContainer').style.display = view === 'map' ? 'block' : 'none';
+  document.getElementById('pagination').style.display = view === 'list' ? '' : 'none';
+  if (view === 'map') initMapView();
+}
+
+function initMapView() {
+  const container = document.getElementById('mapContainer');
+  container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-light);flex-direction:column"><div style="font-size:48px;margin-bottom:12px">🗺️</div><div>地图功能需高德地图 API Key</div><div style="margin-top:8px;font-size:12px">（可通过配置启用高德地图 SDK）</div></div>';
+}
+
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { currentPage = 1; loadSpots(); }, 400);
+}
+
+// 筛选弹窗
+function openFilterModal(type) {
+  const modal = document.getElementById('filterModal');
+  const panel = document.getElementById('filterPanel');
+  modal.classList.add('show');
+
+  let html = '';
+  if (type === 'region') {
+    html = '<h3>📍 选择地区</h3>';
+    html += '<div class="filter-options" id="regionOptions"></div>';
+    panel.innerHTML = html;
+    loadRegionFilter();
+  } else if (type === 'fish') {
+    const fishTypes = ['鲫鱼','鲤鱼','草鱼','翘嘴','白条','鳊鱼','鲢鳙','青鱼','罗非','黑鱼','鲶鱼','黄颡鱼','鳜鱼','其他'];
+    html = '<h3>🐟 选择目标鱼种</h3><div class="filter-options">';
+    for (const f of fishTypes) {
+      const active = currentFilters.fish_type === f ? ' active' : '';
+      html += `<div class="filter-option${active}" onclick="setFilter('fish_type','${f}')">${f}</div>`;
+    }
+    html += '</div>';
+  } else if (type === 'fee') {
+    const fees = [
+      { v: 'free', l: '💰 免费野钓' },
+      { v: 'daily', l: '💳 按天收费' },
+      { v: 'weight', l: '⚖️ 按斤黑坑' }
+    ];
+    html = '<h3>💰 选择收费方式</h3><div class="filter-options">';
+    for (const f of fees) {
+      const active = currentFilters.fee_type === f.v ? ' active' : '';
+      html += `<div class="filter-option${active}" onclick="setFilter('fee_type','${f.v}')">${f.l}</div>`;
+    }
+    html += '</div>';
+  } else if (type === 'water') {
+    const waters = [
+      { v: 'river', l: '🌊 河流' },
+      { v: 'reservoir', l: '🏞️ 水库' },
+      { v: 'lake', l: '🏔️ 湖泊' },
+      { v: 'pond', l: '🪣 塘口' },
+      { v: 'stream', l: '💧 溪流' }
+    ];
+    html = '<h3>🌊 选择水体类型</h3><div class="filter-options">';
+    for (const w of waters) {
+      const active = currentFilters.water_type === w.v ? ' active' : '';
+      html += `<div class="filter-option${active}" onclick="setFilter('water_type','${w.v}')">${w.l}</div>`;
+    }
+    html += '</div>';
+  } else if (type === 'index') {
+    const idxes = [
+      { v: '优', l: '🏆 优 (≥75分)' },
+      { v: '良', l: '👍 良 (60-74分)' },
+      { v: '一般', l: '👌 一般 (40-59分)' },
+      { v: '不适宜', l: '👎 不适宜 (<40分)' }
+    ];
+    html = '<h3>📊 选择垂钓指数</h3><div class="filter-options">';
+    for (const i of idxes) {
+      const active = currentFilters.fishing_level === i.v ? ' active' : '';
+      html += `<div class="filter-option${active}" onclick="setFilter('fishing_level','${i.v}')">${i.l}</div>`;
+    }
+    html += '</div>';
+  }
+
+  html += '<div class="filter-actions"><button class="reset" onclick="resetFilters()">清除筛选</button><button class="apply" onclick="closeFilterModal()">完成</button></div>';
+  panel.innerHTML = html;
+}
+
+async function loadRegionFilter() {
+  const container = document.getElementById('regionOptions');
+  if (!filterData.tree) return container.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:20px">加载中...</div>';
+
+  let html = '<div style="display:flex;flex-direction:column;gap:8px">';
+  for (const p of filterData.tree) {
+    const pActive = currentFilters.province_id === String(p.id) ? ' style="color:var(--primary)"' : '';
+    html += `<div style="font-size:14px;font-weight:600;padding:8px;background:var(--card);border-radius:8px;cursor:pointer"${pActive} onclick="toggleProvinceFilter('${p.id}','${p.name}',this)">${p.name}</div>`;
+    if (currentFilters.province_id === String(p.id)) {
+      for (const c of p.children || []) {
+        const cActive = currentFilters.city_id === String(c.id) ? ' style="color:var(--primary)"' : '';
+        html += `<div style="font-size:13px;padding:6px 6px 6px 20px;cursor:pointer"${cActive} onclick="setFilter('city_id','${c.id}');event.stopPropagation()">${c.name}</div>`;
+        if (currentFilters.city_id === String(c.id) && c.children) {
+          for (const d of c.children) {
+            const dActive = currentFilters.district_id === String(d.id) ? ' style="color:var(--primary)"' : '';
+            html += `<div style="font-size:12px;padding:4px 4px 4px 36px;cursor:pointer"${dActive} onclick="setFilter('district_id','${d.id}');event.stopPropagation()">${d.name}</div>`;
+          }
+        }
+      }
+    }
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function toggleProvinceFilter(id, name, el) {
+  if (currentFilters.province_id === String(id)) {
+    delete currentFilters.province_id;
+    delete currentFilters.city_id;
+    delete currentFilters.district_id;
+  } else {
+    currentFilters.province_id = String(id);
+    delete currentFilters.city_id;
+    delete currentFilters.district_id;
+  }
+  loadRegionFilter();
+  applyFilters();
+}
+
+function setFilter(key, value) {
+  currentFilters[key] = value;
+  currentPage = 1;
+  applyFilters();
+  updateFilterTags();
+}
+
+function applyFilters() {
+  loadSpots();
+}
+
+function resetFilters() {
+  currentFilters = {};
+  currentPage = 1;
+  updateFilterTags();
+  loadSpots();
+  closeFilterModal();
+}
+
+function closeFilterModal() {
+  document.getElementById('filterModal').classList.remove('show');
+  updateFilterTags();
+}
+
+function updateFilterTags() {
+  const tags = document.querySelectorAll('.filter-tag');
+  tags[0].classList.toggle('active', !!(currentFilters.province_id || currentFilters.city_id || currentFilters.district_id));
+  tags[1].classList.toggle('active', !!currentFilters.fish_type);
+  tags[2].classList.toggle('active', !!currentFilters.fee_type);
+  tags[3].classList.toggle('active', !!currentFilters.water_type);
+  tags[4].classList.toggle('active', !!currentFilters.fishing_level);
+}
+
+function safeJSON(str) {
+  try { return JSON.parse(str); } catch(e) { return []; }
+}
+</script>
+</body>
+</html>

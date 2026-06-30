@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>钓点管理后台 - 钓鱼气象</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1a73e8;--primary-light:rgba(26,115,232,0.15);--bg:#0f172a;
+  --card:rgba(255,255,255,0.08);--text:#f1f5f9;--text-secondary:rgba(241,245,249,0.65);
+  --text-light:rgba(241,245,249,0.4);--border:rgba(255,255,255,0.10);
+  --radius:12px;--radius-sm:8px;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;
+}
+html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#0a0e1a;color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+.admin-layout{display:flex;min-height:100vh}
+.sidebar{width:220px;background:#111827;border-right:1px solid var(--border);padding:16px 0;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:200;display:none}
+.sidebar.show{display:block}
+.sidebar-logo{padding:16px 20px;font-size:18px;font-weight:800;color:var(--primary);border-bottom:1px solid var(--border);margin-bottom:8px}
+.sidebar-nav a{display:flex;align-items:center;gap:8px;padding:10px 20px;color:var(--text-secondary);text-decoration:none;font-size:13px;transition:all .2s;border-left:3px solid transparent}
+.sidebar-nav a:hover,.sidebar-nav a.active{color:var(--text);background:rgba(26,115,232,0.1);border-left-color:var(--primary)}
+.main{flex:1;margin-left:0;padding:0;transition:margin-left .3s}
+.topbar{display:flex;align-items:center;padding:12px 16px;background:rgba(10,14,26,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;gap:10px}
+.topbar .menu-toggle{font-size:20px;cursor:pointer;padding:4px;color:var(--text)}
+.topbar .title{font-size:16px;font-weight:700;flex:1}
+.topbar .user-info{font-size:12px;color:var(--text-light)}
+
+.page{display:none;padding:16px}
+.page.active{display:block}
+
+/* 统计卡片 */
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat-card{background:var(--card);border-radius:var(--radius);padding:14px;border:1px solid var(--border)}
+.stat-card .stat-num{font-size:28px;font-weight:800;margin-bottom:2px}
+.stat-card .stat-lbl{font-size:11px;color:var(--text-light)}
+
+/* 表格 */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:12px}
+table{width:100%;border-collapse:collapse;min-width:600px;font-size:12px}
+th,td{padding:8px;text-align:left;border-bottom:1px solid var(--border)}
+th{color:var(--text-light);font-weight:500;white-space:nowrap}
+td{color:var(--text);white-space:nowrap}
+tr:hover td{background:rgba(255,255,255,0.02)}
+
+/* 筛选 */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.filter-bar input,.filter-bar select{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;outline:none;min-width:100px}
+
+/* 按钮 */
+.btn{padding:8px 16px;border-radius:8px;border:none;font-size:13px;cursor:pointer;transition:all .2s;font-weight:600}
+.btn:active{transform:scale(0.95)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-warning{background:var(--warning);color:#000}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-xs{padding:4px 8px;font-size:11px;border-radius:4px}
+
+/* 标签 */
+.tag{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;display:inline-block}
+.tag-published{background:rgba(16,185,129,0.2);color:#6ee7b7}
+.tag-offline{background:rgba(245,158,11,0.2);color:#fcd34d}
+.tag-draft{background:rgba(255,255,255,0.1);color:var(--text-light)}
+.tag-pending{background:rgba(26,115,232,0.2);color:#93c5fd}
+.tag-rejected{background:rgba(239,68,68,0.2);color:#fca5a5}
+.tag-handled{background:rgba(16,185,129,0.2);color:#6ee7b7}
+.tag-ignored{background:rgba(255,255,255,0.1);color:var(--text-light)}
+
+/* 弹窗 */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:rgba(0,0,0,0.5)}
+.modal-overlay.show{display:flex;align-items:center;justify-content:center}
+.modal-panel{width:90%;max-width:500px;background:#1e293b;border-radius:var(--radius);max-height:80vh;overflow-y:auto;padding:20px}
+.modal-panel h3{margin-bottom:16px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;outline:none}
+.form-textarea{resize:vertical;min-height:60px;font-family:inherit}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+.pagination{display:flex;justify-content:center;align-items:center;gap:8px;padding:16px}
+.pagination button{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:13px}
+.pagination button:disabled{opacity:0.4}
+
+.loading{text-align:center;padding:40px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--danger);color:#fff;font-size:10px;font-weight:700;margin-left:4px}
+
+@media(min-width:768px){.sidebar{display:block}.main{margin-left:220px}.menu-toggle{display:none}}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">🎣 管理后台</div>
+    <div class="sidebar-nav">
+      <a href="#dashboard" class="active" onclick="switchPage('dashboard',this)">📊 数据统计</a>
+      <a href="#spots" onclick="switchPage('spots',this)">📍 钓点管理</a>
+      <a href="#submissions" onclick="switchPage('submissions',this)">📝 投稿审核 <span class="badge" id="submissionBadge" style="display:none">0</span></a>
+      <a href="#catches" onclick="switchPage('catches',this)">🐟 渔获管理</a>
+      <a href="#comments" onclick="switchPage('comments',this)">💬 评论管理</a>
+      <a href="#reports" onclick="switchPage('reports',this)">🚩 举报处理</a>
+      <a href="#regions" onclick="switchPage('regions',this)">🗺️ 地区管理</a>
+      <a href="#logs" onclick="switchPage('logs',this)">📋 操作日志</a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
+      <span class="title">钓点管理后台</span>
+      <span class="user-info" id="userInfo">管理员</span>
+      <button class="btn btn-outline btn-xs" onclick="logout()">退出</button>
+    </div>
+
+    <!-- ========== 数据统计 ========== -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="stat-num" style="color:#93c5fd">0</div><div class="stat-lbl">钓点总数</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:#6ee7b7">0</div><div class="stat-lbl">已上架</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:#fcd34d">0</div><div class="stat-lbl">已下架</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--text-light)">0</div><div class="stat-lbl">草稿</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:#6ee7b7">0</div><div class="stat-lbl">渔获总数</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:#93c5fd">0</div><div class="stat-lbl">评论总数</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:#f59e0b">0</div><div class="stat-lbl">待审投稿</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:#ef4444">0</div><div class="stat-lbl">待处理举报</div></div>
+      </div>
+      <h4 style="margin:16px 0 8px">🏆 热门钓点 TOP10</h4>
+      <div id="topList" class="table-wrap"></div>
+      <div style="margin-top:16px">
+        <button class="btn btn-outline" onclick="refreshAllWeather()">🌤️ 刷新全部气象缓存</button>
+        <button class="btn btn-outline" style="margin-left:8px" onclick="exportSpots()">📥 导出钓点数据</button>
+      </div>
+    </div>
+
+    <!-- ========== 钓点管理 ========== -->
+    <div class="page" id="page-spots">
+      <div class="filter-bar">
+        <select id="filterSpotStatus" onchange="loadSpotsAdmin()" class="form-select" style="min-width:80px">
+          <option value="">全部状态</option><option value="published">已上架</option><option value="offline">已下架</option><option value="draft">草稿</option><option value="pending">待审核</option>
+        </select>
+        <input type="text" placeholder="搜索名称/地址" id="filterSpotKeyword" onkeyup="debounceAdminSearch()" style="width:120px">
+        <button class="btn btn-primary btn-xs" onclick="openSpotForm()">+ 新增钓点</button>
+        <span style="font-size:11px;color:var(--text-light)">选中后可批量下架</span>
+      </div>
+      <div class="table-wrap"><table id="spotsTable"><thead><tr>
+        <th><input type="checkbox" id="selectAllSpots" onchange="toggleSelectAll('spots')"></th>
+        <th>ID</th><th>名称</th><th>地区</th><th>类型</th><th>收费</th><th>指数</th><th>状态</th><th>收藏</th><th>操作</th>
+      </tr></thead><tbody id="spotsTbody"></tbody></table></div>
+      <button class="btn btn-warning btn-xs" style="margin-top:8px" onclick="batchAction('offline')">批量下架</button>
+      <button class="btn btn-danger btn-xs" style="margin-top:8px;margin-left:4px" onclick="batchAction('delete')">批量删除</button>
+      <div class="pagination" id="spotsPagination"></div>
+    </div>
+
+    <!-- ========== 投稿审核 ========== -->
+    <div class="page" id="page-submissions">
+      <h3>📝 用户投稿审核</h3>
+      <div class="table-wrap"><table id="subsTable"><thead><tr>
+        <th>钓点名称</th><th>投稿人</th><th>地区</th><th>状态</th><th>时间</th><th>操作</th>
+      </tr></thead><tbody id="subsTbody"></tbody></table></div>
+      <div class="pagination" id="subsPagination"></div>
+    </div>
+
+    <!-- ========== 渔获管理 ========== -->
+    <div class="page" id="page-catches">
+      <h3>🐟 渔获管理</h3>
+      <div class="table-wrap"><table id="catchesTable"><thead><tr>
+        <th>ID</th><th>钓点</th><th>发布者</th><th>重量</th><th>内容</th><th>状态</th><th>时间</th><th>操作</th>
+      </tr></thead><tbody id="catchesTbody"></tbody></table></div>
+      <div class="pagination" id="catchesPagination"></div>
+    </div>
+
+    <!-- ========== 评论管理 ========== -->
+    <div class="page" id="page-comments">
+      <h3>💬 评论管理</h3>
+      <div class="table-wrap"><table id="commentsTable"><thead><tr>
+        <th><input type="checkbox" id="selectAllComments" onchange="toggleSelectAll('comments')"></th>
+        <th>ID</th><th>钓点</th><th>发布者</th><th>内容</th><th>状态</th><th>时间</th><th>操作</th>
+      </tr></thead><tbody id="commentsTbody"></tbody></table></div>
+      <button class="btn btn-danger btn-xs" style="margin-top:8px" onclick="batchDeleteComments()">批量删除</button>
+      <div class="pagination" id="commentsPagination"></div>
+    </div>
+
+    <!-- ========== 举报处理 ========== -->
+    <div class="page" id="page-reports">
+      <h3>🚩 举报处理</h3>
+      <div class="table-wrap"><table id="reportsTable"><thead><tr>
+        <th>ID</th><th>举报人</th><th>目标类型</th><th>原因</th><th>状态</th><th>时间</th><th>操作</th>
+      </tr></thead><tbody id="reportsTbody"></tbody></table></div>
+      <div class="pagination" id="reportsPagination"></div>
+    </div>
+
+    <!-- ========== 地区管理 ========== -->
+    <div class="page" id="page-regions">
+      <h3>🗺️ 地区管理</h3>
+      <button class="btn btn-primary btn-xs" style="margin-bottom:12px" onclick="openRegionForm()">+ 新增地区</button>
+      <div id="regionTree"></div>
+    </div>
+
+    <!-- ========== 操作日志 ========== -->
+    <div class="page" id="page-logs">
+      <h3>📋 操作日志</h3>
+      <div class="table-wrap"><table id="logsTable"><thead><tr>
+        <th>ID</th><th>操作人</th><th>操作</th><th>目标</th><th>详情</th><th>时间</th>
+      </tr></thead><tbody id="logsTbody"></tbody></table></div>
+      <div class="pagination" id="logsPagination"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑弹窗 -->
+<div class="modal-overlay" id="editModal" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-panel" id="editPanel"></div>
+</div>
+
+<script>
+const API = window.location.origin + '/api';
+const token = localStorage.getItem('token') || '';
+let currentPage = 'dashboard';
+let currentUser = null;
+let adminPages = { spots:1, submissions:1, catches:1, comments:1, reports:1, logs:1 };
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!token) { document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh"><div style="text-align:center"><h2>🔒 请先登录</h2><p style="margin:12px 0"><a href="/login.html">管理员登录</a></p></div></div>'; return; }
+  loadCurrentUser();
+  loadDashboard();
+  loadSpotsAdmin();
+  updateSubmissionBadge();
+});
+
+async function loadCurrentUser() {
+  try {
+    const res = await fetch(API + '/auth/me', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    currentUser = data.user;
+    document.getElementById('userInfo').textContent = `${data.user.nickname} (${data.user.role === 'super_admin' ? '超级管理员' : '管理员'})`;
+    if (!['super_admin', 'admin'].includes(data.user.role)) { alert('无管理员权限'); location.href = '/'; }
+  } catch(e) { alert('登录已过期'); location.href = '/login.html'; }
+}
+
+function logout() { localStorage.removeItem('token'); location.href = '/login.html'; }
+
+function switchPage(page, el) {
+  currentPage = page;
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+
+  if (page === 'dashboard') loadDashboard();
+  else if (page === 'spots') loadSpotsAdmin();
+  else if (page === 'submissions') loadSubmissions();
+  else if (page === 'catches') loadCatchesAdmin();
+  else if (page === 'comments') loadCommentsAdmin();
+  else if (page === 'reports') loadReportsAdmin();
+  else if (page === 'regions') loadRegionsAdmin();
+  else if (page === 'logs') loadLogsAdmin();
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+
+// ========== 数据统计 ==========
+async function loadDashboard() {
+  try {
+    const res = await fetch(API + '/admin/statistics', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const totals = data.totals || {};
+    const cards = document.querySelectorAll('#statsRow .stat-card .stat-num');
+    cards[0].textContent = totals.spots || 0;
+    cards[1].textContent = totals.published || 0;
+    cards[2].textContent = totals.offline || 0;
+    cards[3].textContent = totals.draft || 0;
+    cards[4].textContent = totals.catches || 0;
+    cards[5].textContent = totals.comments || 0;
+    cards[6].textContent = totals.pendingSubmissions || 0;
+    cards[7].textContent = totals.pendingReports || 0;
+
+    // TOP10
+    let topHtml = '<table><tr><th>排名</th><th>钓点</th><th>收藏</th><th>渔获</th><th>评论</th></tr>';
+    for (let i = 0; i < (data.topFavorites || []).length; i++) {
+      const s = data.topFavorites[i];
+      topHtml += `<tr><td>${i+1}</td><td>${s.name}</td><td>⭐ ${s.favorites_count}</td><td>🐟 ${(data.topCatches[i]||{}).catches_count||0}</td><td>💬 ${(data.topComments[i]||{}).comments_count||0}</td></tr>`;
+    }
+    topHtml += '</table>';
+    document.getElementById('topList').innerHTML = topHtml;
+  } catch(e) { console.error(e); }
+}
+
+// ========== 钓点管理 ==========
+let selectedSpots = new Set();
+
+async function loadSpotsAdmin(page = 1) {
+  adminPages.spots = page;
+  const status = document.getElementById('filterSpotStatus').value;
+  const keyword = document.getElementById('filterSpotKeyword').value;
+  const params = new URLSearchParams({ page, size: 50 });
+  if (status) params.set('status', status);
+  if (keyword) params.set('keyword', keyword);
+
+  try {
+    const res = await fetch(API + '/admin/spots?' + params, { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const spots = data.data || [];
+    let html = '';
+    for (const s of spots) {
+      html += `<tr>
+        <td><input type="checkbox" value="${s.id}" class="spot-check" onchange="toggleSpotSelect('${s.id}',this)"></td>
+        <td>${s.id.slice(0,8)}</td><td>${s.name}</td>
+        <td>${s.district || s.city || ''}</td>
+        <td>${s.water_type || '--'}</td><td>${s.fee_type || '--'}</td>
+        <td>${s.fishing_index || 50}</td>
+        <td><span class="tag tag-${s.status}">${s.status}</span></td>
+        <td>⭐ ${s.favorites_count || 0}</td>
+        <td>
+          <button class="btn btn-xs btn-outline" onclick="openSpotForm('${s.id}')">编辑</button>
+          <button class="btn btn-xs ${s.status==='published'?'btn-warning':'btn-success'}" onclick="toggleSpotStatus('${s.id}','${s.status==='published'?'offline':'published'}')">${s.status==='published'?'下架':'上架'}</button>
+          <button class="btn btn-xs btn-danger" onclick="deleteSpot('${s.id}')">删除</button>
+        </td>
+      </tr>`;
+    }
+    document.getElementById('spotsTbody').innerHTML = html;
+    renderPagination('spots', data.pagination);
+  } catch(e) { console.error(e); }
+}
+
+function toggleSpotSelect(id, el) { if (el.checked) selectedSpots.add(id); else selectedSpots.delete(id); }
+
+function toggleSelectAll(type) {
+  const allCheck = document.getElementById('selectAll' + (type === 'spots' ? 'Spots' : 'Comments'));
+  const checks = document.querySelectorAll('.' + (type === 'spots' ? 'spot-check' : 'comment-check'));
+  checks.forEach(c => { c.checked = allCheck.checked; toggleSpotSelect(c.value, c); });
+}
+
+async function batchAction(action) {
+  if (!selectedSpots.size) return alert('请先选择钓点');
+  if (action === 'delete' && !confirm('确认批量删除 ' + selectedSpots.size + ' 个钓点？(仅超级管理员)')) return;
+  await fetch(API + '/admin/spots/batch', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ ids: Array.from(selectedSpots), action })
+  });
+  selectedSpots.clear();
+  loadSpotsAdmin();
+}
+
+async function toggleSpotStatus(id, status) {
+  await fetch(API + '/admin/spots/' + id + '/status', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ status })
+  });
+  loadSpotsAdmin();
+}
+
+async function deleteSpot(id) {
+  if (!confirm('确认删除此钓点？')) return;
+  await fetch(API + '/admin/spots/' + id + '/status', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ status: 'deleted' })
+  });
+  loadSpotsAdmin();
+}
+
+// ========== 投稿审核 ==========
+async function loadSubmissions() {
+  try {
+    const res = await fetch(API + '/admin/submissions?size=50', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const subs = data.data || [];
+    let html = '';
+    for (const s of subs) {
+      html += `<tr>
+        <td>${s.name}</td><td>${s.submitter_name || '匿名'}</td>
+        <td>${s.district || s.city || ''}</td>
+        <td><span class="tag tag-${s.status}">${s.status === 'pending' ? '待审核' : '已驳回'}</span></td>
+        <td>${s.created_at}</td>
+        <td>
+          ${s.status === 'pending' ? `<button class="btn btn-xs btn-success" onclick="approveSubmission('${s.id}')">通过</button><button class="btn btn-xs btn-danger" onclick="rejectSubmission('${s.id}')">驳回</button>` : `<span style="color:var(--text-light)">已处理</span>`}
+        </td>
+      </tr>`;
+    }
+    document.getElementById('subsTbody').innerHTML = html || '<tr><td colspan="6" style="text-align:center;color:var(--text-light)">暂无待审核投稿</td></tr>';
+  } catch(e) { console.error(e); }
+}
+
+async function approveSubmission(id) {
+  await fetch(API + '/admin/submissions/' + id + '/review', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ action: 'approve' })
+  });
+  loadSubmissions();
+  updateSubmissionBadge();
+}
+
+async function rejectSubmission(id) {
+  const reason = prompt('驳回理由：');
+  await fetch(API + '/admin/submissions/' + id + '/review', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ action: 'reject', reason })
+  });
+  loadSubmissions();
+  updateSubmissionBadge();
+}
+
+async function updateSubmissionBadge() {
+  try {
+    const res = await fetch(API + '/admin/statistics', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const count = (data.totals || {}).pendingSubmissions || 0;
+    const badge = document.getElementById('submissionBadge');
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  } catch(e) {}
+}
+
+// ========== 渔获管理 ==========
+async function loadCatchesAdmin() {
+  try {
+    const res = await fetch(API + '/admin/catches?size=50', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const items = data.data || [];
+    let html = '';
+    for (const c of items) {
+      html += `<tr>
+        <td>${c.id.slice(0,8)}</td><td>${c.spot_name || '--'}</td><td>${c.nickname || c.username || '匿名'}</td>
+        <td>${c.weight || '--'}斤</td><td>${c.feeling || ''}</td>
+        <td><span class="tag tag-${c.status}">${c.status}</span></td>
+        <td>${c.created_at}</td>
+        <td><button class="btn btn-xs btn-danger" onclick="deleteCatch('${c.id}')">删除</button></td>
+      </tr>`;
+    }
+    document.getElementById('catchesTbody').innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:var(--text-light)">暂无渔获</td></tr>';
+  } catch(e) { console.error(e); }
+}
+
+async function deleteCatch(id) {
+  if (!confirm('确认删除此渔获？')) return;
+  await fetch(API + '/admin/catches/' + id, {
+    method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
+  });
+  loadCatchesAdmin();
+}
+
+// ========== 评论管理 ==========
+async function loadCommentsAdmin() {
+  try {
+    const res = await fetch(API + '/admin/comments?size=50', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const items = data.data || [];
+    let html = '';
+    for (const c of items) {
+      html += `<tr>
+        <td><input type="checkbox" value="${c.id}" class="comment-check"></td>
+        <td>${c.id.slice(0,8)}</td><td>${c.spot_name || '--'}</td><td>${c.nickname || c.username || '匿名'}</td>
+        <td>${c.content}</td>
+        <td><span class="tag tag-${c.status}">${c.status}</span></td>
+        <td>${c.created_at}</td>
+        <td><button class="btn btn-xs btn-danger" onclick="deleteComment('${c.id}')">删除</button></td>
+      </tr>`;
+    }
+    document.getElementById('commentsTbody').innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:var(--text-light)">暂无评论</td></tr>';
+  } catch(e) { console.error(e); }
+}
+
+async function deleteComment(id) {
+  if (!confirm('确认删除此评论？')) return;
+  await fetch(API + '/admin/comments/' + id, {
+    method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
+  });
+  loadCommentsAdmin();
+}
+
+async function batchDeleteComments() {
+  const checks = document.querySelectorAll('.comment-check:checked');
+  if (!checks.length) return alert('请选择评论');
+  if (!confirm('确认删除 ' + checks.length + ' 条评论？')) return;
+  const ids = Array.from(checks).map(c => c.value);
+  await fetch(API + '/admin/comments/batch-delete', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ ids })
+  });
+  loadCommentsAdmin();
+}
+
+// ========== 举报管理 ==========
+async function loadReportsAdmin() {
+  try {
+    const res = await fetch(API + '/admin/reports?size=50', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const items = data.data || [];
+    let html = '';
+    for (const r of items) {
+      html += `<tr>
+        <td>${r.id.slice(0,8)}</td><td>${r.reporter_name || '匿名'}</td>
+        <td>${r.target_type}</td><td>${r.reason || ''}</td>
+        <td><span class="tag tag-${r.status === 'handled' ? 'handled' : r.status === 'ignored' ? 'ignored' : 'pending'}">${r.status}</span></td>
+        <td>${r.created_at}</td>
+        <td>${r.status === 'pending' ? `<button class="btn btn-xs btn-success" onclick="handleReport('${r.id}','handle')">处理</button><button class="btn btn-xs btn-outline" onclick="handleReport('${r.id}','ignore')">忽略</button>` : `<span style="color:var(--text-light)">已处理</span>`}</td>
+      </tr>`;
+    }
+    document.getElementById('reportsTbody').innerHTML = html || '<tr><td colspan="7" style="text-align:center;color:var(--text-light)">暂无举报</td></tr>';
+  } catch(e) { console.error(e); }
+}
+
+async function handleReport(id, action) {
+  await fetch(API + '/admin/reports/' + id + '/handle', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ action })
+  });
+  loadReportsAdmin();
+  loadDashboard();
+}
+
+// ========== 地区管理 ==========
+async function loadRegionsAdmin() {
+  try {
+    const res = await fetch(API + '/regions/tree');
+    const data = await res.json();
+    const tree = data.data || [];
+    let html = '';
+    for (const p of tree) {
+      html += `<div style="margin-bottom:8px">
+        <div style="font-size:14px;font-weight:700;padding:8px;background:var(--card);border-radius:8px">📍 ${p.name} <span style="font-size:11px;color:var(--text-light);float:right;cursor:pointer" onclick="deleteRegion(${p.id})">🗑️</span></div>`;
+      for (const c of p.children || []) {
+        html += `<div style="font-size:13px;padding:6px 6px 6px 20px">🏙️ ${c.name} <span style="font-size:11px;color:var(--text-light);float:right;cursor:pointer" onclick="deleteRegion(${c.id})">🗑️</span></div>`;
+        for (const d of c.children || []) {
+          html += `<div style="font-size:12px;padding:4px 4px 4px 36px;color:var(--text-secondary)">📍 ${d.name} <span style="font-size:11px;color:var(--text-light);float:right;cursor:pointer" onclick="deleteRegion(${d.id})">🗑️</span></div>`;
+        }
+      }
+      html += '</div>';
+    }
+    document.getElementById('regionTree').innerHTML = html;
+  } catch(e) { console.error(e); }
+}
+
+async function openRegionForm() {
+  document.getElementById('editPanel').innerHTML = `
+    <h3>新增地区</h3>
+    <div class="form-group"><label>级别</label><select class="form-select" id="regLevel" onchange="updateRegionParent()"><option value="province">省份</option><option value="city">城市</option><option value="district">区县</option></select></div>
+    <div class="form-group"><label>上级地区</label><select class="form-select" id="regParent"><option value="0">无（顶级）</option></select></div>
+    <div class="form-group"><label>名称</label><input class="form-input" id="regName" placeholder="地区名称"></div>
+    <div class="form-actions"><button class="btn btn-outline" onclick="closeEditModal()">取消</button><button class="btn btn-primary" onclick="saveRegion()">保存</button></div>
+  `;
+  updateRegionParent();
+  document.getElementById('editModal').classList.add('show');
+}
+
+async function updateRegionParent() {
+  const level = document.getElementById('regLevel').value;
+  const parentSelect = document.getElementById('regParent');
+  if (level === 'province') { parentSelect.innerHTML = '<option value="0">无（顶级）</option>'; return; }
+  try {
+    const res = await fetch(API + '/regions?level=' + (level === 'city' ? 'province' : 'city'), { headers: { 'Authorization': 'Bearer ' + token } });
+    // Simplified
+    const data = await res.json();
+    parentSelect.innerHTML = '<option value="">请选择</option>';
+    for (const r of (data.data || [])) {
+      parentSelect.innerHTML += `<option value="${r.id}">${r.name}</option>`;
+    }
+  } catch(e) {}
+}
+
+async function saveRegion() {
+  const name = document.getElementById('regName').value.trim();
+  const level = document.getElementById('regLevel').value;
+  const parentId = document.getElementById('regParent').value;
+  if (!name) return alert('请输入名称');
+  await fetch(API + '/admin/regions', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ parent_id: parseInt(parentId) || 0, name, level })
+  });
+  closeEditModal();
+  loadRegionsAdmin();
+}
+
+async function deleteRegion(id) {
+  if (!confirm('确认删除此地区？')) return;
+  const res = await fetch(API + '/admin/regions/' + id, {
+    method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
+  });
+  const data = await res.json();
+  if (data.error) alert(data.error);
+  else loadRegionsAdmin();
+}
+
+// ========== 操作日志 ==========
+async function loadLogsAdmin() {
+  try {
+    const res = await fetch(API + '/admin/logs?size=50', { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    const items = data.data || [];
+    let html = '';
+    for (const l of items) {
+      html += `<tr><td>${l.id}</td><td>${l.admin_name || '系统'}</td><td>${l.action}</td><td>${l.target_type || ''}</td><td>${l.detail || ''}</td><td>${l.created_at}</td></tr>`;
+    }
+    document.getElementById('logsTbody').innerHTML = html || '<tr><td colspan="6" style="text-align:center;color:var(--text-light)">暂无日志</td></tr>';
+  } catch(e) { console.error(e); }
+}
+
+// ========== 工具函数 ==========
+async function refreshAllWeather() {
+  if (!confirm('将重新拉取所有已上架钓点的天气数据，可能需要几分钟。确认继续？')) return;
+  const res = await fetch(API + '/admin/weather/refresh', {
+    method: 'POST', headers: { 'Authorization': 'Bearer ' + token }
+  });
+  const data = await res.json();
+  alert(`气象缓存已刷新：${data.updated}/${data.total} 个钓点已更新`);
+}
+
+function exportSpots() { window.open(API + '/admin/spots/export?token=' + token); }
+
+async function openSpotForm(spotId) {
+  // Open edit form (simplified — in production this would be a full form)
+  if (spotId) {
+    const res = await fetch(API + '/spots/' + spotId);
+    const data = await res.json();
+    const s = data.data;
+    // Show basic edit
+    document.getElementById('editPanel').innerHTML = `
+      <h3>编辑钓点: ${s.name}</h3>
+      <div class="form-group"><label>名称</label><input class="form-input" id="editName" value="${s.name||''}"></div>
+      <div class="form-group"><label>地址</label><input class="form-input" id="editAddress" value="${s.address||''}"></div>
+      <div class="form-group"><label>状态</label><select class="form-select" id="editStatus">
+        <option value="published" ${s.status==='published'?'selected':''}>上架</option>
+        <option value="offline" ${s.status==='offline'?'selected':''}>下架</option>
+        <option value="draft" ${s.status==='draft'?'selected':''}>草稿</option>
+      </select></div>
+      <div class="form-actions">
+        <button class="btn btn-outline" onclick="closeEditModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveSpotEdit('${s.id}')">保存</button>
+      </div>`;
+  } else {
+    // New spot (simplified)
+    document.getElementById('editPanel').innerHTML = `
+      <h3>新增钓点</h3>
+      <div class="form-group"><label>名称 <span style="color:red">*</span></label><input class="form-input" id="editName" placeholder="钓点名称"></div>
+      <div class="form-group"><label>纬度 <span style="color:red">*</span></label><input class="form-input" id="editLat" type="number" step="0.000001" placeholder="如：31.23"></div>
+      <div class="form-group"><label>经度 <span style="color:red">*</span></label><input class="form-input" id="editLon" type="number" step="0.000001" placeholder="如：121.47"></div>
+      <div class="form-group"><label>地址</label><input class="form-input" id="editAddress" placeholder="详细地址"></div>
+      <div class="form-group"><label>水体类型</label><select class="form-select" id="editWater"><option value="river">河流</option><option value="reservoir">水库</option><option value="lake">湖泊</option><option value="pond">塘口</option><option value="stream">溪流</option></select></div>
+      <div class="form-group"><label>收费</label><select class="form-select" id="editFee"><option value="free">免费</option><option value="daily">按天</option><option value="weight">按斤</option></select></div>
+      <div class="form-group"><label>状态</label><select class="form-select" id="editStatus"><option value="published">直接上架</option><option value="draft">保存草稿</option></select></div>
+      <div class="form-actions">
+        <button class="btn btn-outline" onclick="closeEditModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveSpotEdit()">创建</button>
+      </div>`;
+  }
+  document.getElementById('editModal').classList.add('show');
+}
+
+async function saveSpotEdit(spotId) {
+  const name = document.getElementById('editName').value.trim();
+  if (!name) return alert('名称不能为空');
+
+  const body = { name, status: document.getElementById('editStatus').value };
+
+  if (spotId) {
+    body.address = document.getElementById('editAddress').value;
+    await fetch(API + '/admin/spots/' + spotId, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(body)
+    });
+  } else {
+    body.latitude = parseFloat(document.getElementById('editLat').value);
+    body.longitude = parseFloat(document.getElementById('editLon').value);
+    body.address = document.getElementById('editAddress').value;
+    body.water_type = document.getElementById('editWater').value;
+    body.fee_type = document.getElementById('editFee').value;
+    if (!body.latitude || !body.longitude) return alert('经纬度不能为空');
+    await fetch(API + '/admin/spots', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(body)
+    });
+  }
+  closeEditModal();
+  loadSpotsAdmin();
+  loadDashboard();
+}
+
+function closeEditModal() { document.getElementById('editModal').classList.remove('show'); }
+
+function renderPagination(type, pagination) {
+  if (!pagination) return;
+  const el = document.getElementById(type + 'Pagination');
+  if (!el) return;
+  let html = '';
+  html += `<button ${pagination.page <= 1 ? 'disabled' : ''} onclick="load${type.charAt(0).toUpperCase()+type.slice(1)}Admin(${pagination.page - 1})">上一页</button>`;
+  html += `<span style="font-size:13px">${pagination.page} / ${pagination.totalPages}</span>`;
+  html += `<button ${pagination.page >= pagination.totalPages ? 'disabled' : ''} onclick="load${type.charAt(0).toUpperCase()+type.slice(1)}Admin(${pagination.page + 1})">下一页</button>`;
+  el.innerHTML = html;
+}
+
+function debounceAdminSearch() {
+  clearTimeout(window._adminSearchTimer);
+  window._adminSearchTimer = setTimeout(loadSpotsAdmin, 400);
+}
+
+// Handle hash navigation
+window.addEventListener('hashchange', () => {
+  const page = location.hash.replace('#', '') || 'dashboard';
+  const el = document.querySelector(`.sidebar-nav a[href="#${page}"]`);
+  switchPage(page, el);
+});
+if (location.hash) {
+  const page = location.hash.replace('#', '');
+  setTimeout(() => {
+    const el = document.querySelector(`.sidebar-nav a[href="#${page}"]`);
+    if (el) switchPage(page, el);
+  }, 100);
+}
+</script>
+</body>
+</html>
