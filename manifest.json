@@ -1,0 +1,14 @@
+{
+  "name": "钓鱼气象",
+  "short_name": "钓鱼气象",
+  "description": "专业钓鱼气象助手 - 鱼口评分、天气分析、钓点管理",
+  "start_url": "/fishing-weather-prototype.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f7fa",
+  "theme_color": "#1a73e8",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
