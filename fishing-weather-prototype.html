@@ -287,12 +287,12 @@ html, body {
     <div class="section-card animate-in" style="animation-delay:0.2s">
       <div class="section-title"><span style="font-size:18px">🌡️</span> 实时气象数据</div>
       <div class="weather-grid">
-        <div class="weather-item"><div style="font-size:20px">🌡️</div><div class="wi-label">实时气温</div><div class="wi-value">28.5℃</div></div>
-        <div class="weather-item"><div style="font-size:20px">💧</div><div class="wi-label">湿度</div><div class="wi-value">68%</div></div>
-        <div class="weather-item"><div style="font-size:20px">🌬️</div><div class="wi-label">风向风力</div><div class="wi-value">东南3级</div></div>
-        <div class="weather-item"><div style="font-size:20px">🌧️</div><div class="wi-label">降雨量</div><div class="wi-value">0.0mm</div></div>
-        <div class="weather-item"><div style="font-size:20px">☀️</div><div class="wi-label">紫外线</div><div class="wi-value">中等</div></div>
-        <div class="weather-item" style="background:linear-gradient(135deg,#fef3c7,#fde68a)"><div style="font-size:20px">🔽</div><div class="wi-label">实时气压</div><div class="wi-value" style="color:#92400e">1012hPa</div><div style="font-size:11px;color:#b45309">▼ 下降趋势</div></div>
+        <div class="weather-item"><div style="font-size:20px">🌡️</div><div class="wi-label">实时气温</div><div class="wi-value" id="wi-temp">28.5℃</div></div>
+        <div class="weather-item"><div style="font-size:20px">💧</div><div class="wi-label">湿度</div><div class="wi-value" id="wi-humidity">68%</div></div>
+        <div class="weather-item"><div style="font-size:20px">🌬️</div><div class="wi-label">风向风力</div><div class="wi-value" id="wi-wind">东南3级</div></div>
+        <div class="weather-item"><div style="font-size:20px">🌧️</div><div class="wi-label">降雨量</div><div class="wi-value" id="wi-rain">0.0mm</div></div>
+        <div class="weather-item"><div style="font-size:20px">☀️</div><div class="wi-label">紫外线</div><div class="wi-value" id="wi-uv">中等</div></div>
+        <div class="weather-item" style="background:linear-gradient(135deg,#fef3c7,#fde68a)"><div style="font-size:20px">🔽</div><div class="wi-label">实时气压</div><div class="wi-value" id="wi-pressure" style="color:#92400e">1012hPa</div><div style="font-size:11px;color:#b45309" id="wi-pressure-trend">▼ 下降趋势</div></div>
       </div>
     </div>
 
@@ -916,17 +916,19 @@ function updateRealTimeCard(data) {
       sourceEl.style.color = '#d97706';
     }
   }
-  // 实时气象网格
-  setText('.weather-item:nth-child(1) .wi-value', (data.temperature != null ? data.temperature + '℃' : '--'));
-  setText('.weather-item:nth-child(2) .wi-value', (data.humidity != null ? data.humidity + '%' : '--'));
-  setText('.weather-item:nth-child(3) .wi-value', (data.wind_direction || '--') + ' ' + (data.wind_power || ''));
-  setText('.weather-item:nth-child(4) .wi-value', (data.precipitation != null ? data.precipitation + 'mm' : '0.0mm'));
-  setText('.weather-item:nth-child(5) .wi-value', (data.uv != null ? (data.uv > 5 ? '强' : data.uv > 2 ? '中等' : '弱') : '--'));
+  // 实时气象网格 - 用 ID 直接更新
+  setText('#wi-temp', (data.temperature != null ? data.temperature + '℃' : '--'));
+  setText('#wi-humidity', (data.humidity != null ? data.humidity + '%' : '--'));
+  setText('#wi-wind', (data.wind_direction || '--') + ' ' + (data.wind_power || ''));
+  setText('#wi-rain', (data.precipitation != null ? data.precipitation + 'mm' : '0.0mm'));
+  setText('#wi-uv', (data.uv != null ? (data.uv > 5 ? '强' : data.uv > 2 ? '中等' : '弱') : '--'));
   // 气压项
-  const pressureItem = document.querySelectorAll('.weather-item')[5];
-  if (pressureItem && data.pressure) {
-    const pressureEl = pressureItem.querySelector('.wi-value');
-    if (pressureEl) pressureEl.textContent = data.pressure + 'hPa';
+  if (data.pressure) {
+    setText('#wi-pressure', data.pressure + 'hPa');
+    // 气压趋势（如果有历史数据）
+    if (data.pressureTrend) {
+      setText('#wi-pressure-trend', (data.pressureTrend > 0 ? '▲ 上升趋势' : data.pressureTrend < 0 ? '▼ 下降趋势' : '● 稳定'));
+    }
   }
 }
 
