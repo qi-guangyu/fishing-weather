@@ -140,6 +140,40 @@ html, body {
 .day-card .day-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid currentColor; min-width: 34px; text-align: center; }
 .day-card .day-tag.fish-score { color: #fbbf24; }
 .day-card .day-tag.comfort { color: #ef4444; }
+.fish-mode-tabs { display: flex; gap: 8px; padding: 0 16px 12px; }
+.fish-mode { flex: 1; text-align: center; padding: 8px 0; border-radius: 20px; background: rgba(255,255,255,0.06); color: var(--text-secondary); font-size: 13px; cursor: pointer; border: 1px solid transparent; }
+.fish-mode.active { background: rgba(26,115,232,0.2); color: #93c5fd; border-color: rgba(26,115,232,0.35); }
+.fish-species-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 4px 16px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.fish-species-scroll::-webkit-scrollbar { display: none; }
+.fish-species { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 64px; padding: 8px 4px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; }
+.fish-species.active { background: rgba(26,115,232,0.18); border-color: rgba(26,115,232,0.4); }
+.fish-species .fs-icon { font-size: 28px; line-height: 1; }
+.fish-species .fs-name { font-size: 11px; color: var(--text-secondary); }
+.fish-date-scroll { display: flex; gap: 6px; overflow-x: auto; padding: 4px 16px 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; border-bottom: 1px solid var(--border-light); margin-bottom: 8px; }
+.fish-date-scroll::-webkit-scrollbar { display: none; }
+.fish-date { flex-shrink: 0; width: 58px; text-align: center; padding: 8px 4px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid transparent; cursor: pointer; }
+.fish-date.active { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
+.fish-date .fd-day { font-size: 11px; color: var(--text-secondary); }
+.fish-date .fd-date { font-size: 12px; font-weight: 600; margin-top: 2px; }
+.fish-table-wrap { overflow-x: auto; padding: 0 16px; -webkit-overflow-scrolling: touch; }
+.fish-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.fish-table th { text-align: center; padding: 8px 4px; color: var(--text-secondary); font-weight: 500; border-bottom: 1px solid var(--border-light); white-space: nowrap; }
+.fish-table td { text-align: center; padding: 10px 4px; border-bottom: 1px solid var(--border-light); white-space: nowrap; }
+.fish-table tr:last-child td { border-bottom: none; }
+.fish-table .ft-time { color: var(--text-secondary); }
+.fish-table .ft-weather { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.fish-table .ft-weather .ft-icon { font-size: 18px; }
+.fish-table .ft-weather .ft-desc { font-size: 10px; color: var(--text-secondary); }
+.fish-table .ft-temp { color: #fbbf24; font-weight: 600; }
+.fish-table .ft-pressure { color: var(--text); }
+.fish-table .ft-wind { font-size: 10px; color: var(--text-secondary); }
+.fish-table .ft-score { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; font-weight: 700; font-size: 14px; }
+.fish-table .ft-score.excellent { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+.fish-table .ft-score.good { background: rgba(26,115,232,0.2); color: #93c5fd; }
+.fish-table .ft-score.fair { background: rgba(245,158,11,0.2); color: #fcd34d; }
+.fish-table .ft-score.poor { background: rgba(239,68,68,0.2); color: #fca5a5; }
+.fish-table .ft-score .ft-tag { font-size: 9px; font-weight: 400; opacity: 0.85; }
+
 .ai-suggestion {
   background: rgba(16,185,129,0.06);
   border-radius: var(--radius); padding: 16px; margin: 12px 16px;
@@ -303,6 +337,23 @@ html, body {
     <div class="section-card animate-in" style="animation-delay:0.25s">
       <div class="section-title"><span style="font-size:18px">📅</span> 15天预报</div>
       <div id="weekly-forecast" class="forecast-scroll"><div class="forecast-track" id="forecast-track"></div></div>
+    </div>
+
+    <div class="section-card animate-in" style="animation-delay:0.32s">
+      <div class="section-title"><span style="font-size:18px">🐟</span> 钓鱼指数</div>
+      <div class="fish-mode-tabs">
+        <div class="fish-mode active" data-mode="taiwan" onclick="switchFishMode('taiwan')">台钓</div>
+        <div class="fish-mode" data-mode="lure" onclick="switchFishMode('lure')">路亚</div>
+        <div class="fish-mode" data-mode="sea" onclick="switchFishMode('sea')">海钓</div>
+      </div>
+      <div class="fish-species-scroll" id="fish-species-scroll"></div>
+      <div class="fish-date-scroll" id="fish-date-scroll"></div>
+      <div class="fish-table-wrap">
+        <table class="fish-table" id="fish-index-table">
+          <thead><tr><th>时间</th><th>天气</th><th>气温</th><th>气压</th><th>风</th><th>指数</th></tr></thead>
+          <tbody id="fish-index-body"></tbody>
+        </table>
+      </div>
     </div>
 
     <div class="ai-suggestion animate-in" style="animation-delay:0.4s">
@@ -999,7 +1050,6 @@ function renderHourlyReal(hourlyForecast) {
         '</tr>';
     }).join('') + '</tbody></table>';
   window._hourlyWithScore = hourlyWithScore;
-  window._hourlyWithScore = hourlyWithScore;
 }
 
 // 把预报补足到15天（真实API只返回7天，后面用趋势模拟补齐）
@@ -1156,6 +1206,7 @@ async function loadWeatherData(city, forceRefresh) {
   try { if (data.hourly_forecast) renderHourlyReal(data.hourly_forecast); } catch(e) { console.warn('[render] hourly:', e); }
   updateRealTimeCard(data);
   try { if (data.forecast) renderWeeklyReal(data.forecast); } catch(e) { console.warn('[render] weekly:', e); }
+  try { renderFishIndex(data); } catch(e) { console.warn('[render] fishIndex:', e); }
   try { renderAIAdvice(data); } catch(e) { console.warn('[render] advice:', e); }
   // 钓鱼指数
   if (data.life_indices && data.life_indices.fishing) {
@@ -1163,6 +1214,171 @@ async function loadWeatherData(city, forceRefresh) {
     // 可以在AI建议区补充
   }
   if (fromCache) showToast('已加载缓存数据（30分钟内有效）');
+}
+
+// ==================== 钓鱼指数模块 ====================
+const FISH_SPECIES_DATA = {
+  taiwan: [
+    { key: 'jiyu', name: '鲫鱼', icon: '🐟', temp: [15, 25] },
+    { key: 'liyu', name: '鲤鱼', icon: '🐠', temp: [18, 28] },
+    { key: 'caoyu', name: '草鱼', icon: '🐡', temp: [20, 30] },
+    { key: 'qingyu', name: '青鱼', icon: '🦈', temp: [18, 28] }
+  ],
+  lure: [
+    { key: 'qiaozui', name: '翘嘴', icon: '🐟', temp: [18, 28] },
+    { key: 'luyu', name: '鲈鱼', icon: '🐠', temp: [16, 26] },
+    { key: 'guiyu', name: '鳜鱼', icon: '🐡', temp: [15, 25] },
+    { key: 'heiyu', name: '黑鱼', icon: '🦈', temp: [20, 30] }
+  ],
+  sea: [
+    { key: 'daiyu', name: '带鱼', icon: '🐟', temp: [18, 26] },
+    { key: 'diaoyu', name: '鲷鱼', icon: '🐠', temp: [16, 26] },
+    { key: 'luyu2', name: '海鲈', icon: '🐡', temp: [15, 25] },
+    { key: 'bayu', name: '鲅鱼', icon: '🦈', temp: [16, 24] }
+  ]
+};
+let fishState = { mode: 'taiwan', speciesKey: 'jiyu', dayIndex: 0 };
+
+function switchFishMode(mode) {
+  fishState.mode = mode;
+  fishState.speciesKey = FISH_SPECIES_DATA[mode][0].key;
+  document.querySelectorAll('.fish-mode').forEach(el => el.classList.toggle('active', el.dataset.mode === mode));
+  renderFishSpecies();
+  renderFishIndexTable();
+}
+
+function switchFishSpecies(key) {
+  fishState.speciesKey = key;
+  document.querySelectorAll('.fish-species').forEach(el => el.classList.toggle('active', el.dataset.key === key));
+  renderFishIndexTable();
+}
+
+function switchFishDay(idx) {
+  fishState.dayIndex = idx;
+  document.querySelectorAll('.fish-date').forEach((el, i) => el.classList.toggle('active', i === idx));
+  renderFishIndexTable();
+}
+
+function renderFishSpecies() {
+  const list = FISH_SPECIES_DATA[fishState.mode];
+  const container = document.getElementById('fish-species-scroll');
+  container.innerHTML = list.map(s => {
+    return '<div class="fish-species ' + (s.key === fishState.speciesKey ? 'active' : '') + '" data-key="' + s.key + '" onclick="switchFishSpecies(\'' + s.key + '\')">' +
+      '<div class="fs-icon">' + s.icon + '</div><div class="fs-name">' + s.name + '</div></div>';
+  }).join('');
+}
+
+function renderFishDates(forecast) {
+  const days = padForecastTo15Days(forecast);
+  const container = document.getElementById('fish-date-scroll');
+  container.innerHTML = days.map((d, i) => {
+    const dayLabel = getDayLabel(i, d.date);
+    const dateStr = d.date ? d.date.slice(5).replace('-', '/') : 'N/A';
+    return '<div class="fish-date ' + (i === fishState.dayIndex ? 'active' : '') + '" onclick="switchFishDay(' + i + ')">' +
+      '<div class="fd-day">' + dayLabel + '</div><div class="fd-date">' + dateStr + '</div></div>';
+  }).join('');
+}
+
+function generateDayHourly(dayData, baseHourly) {
+  // 基于当天的最高/最低温、天气、风力，生成24小时模拟数据
+  const maxT = dayData.temp_max || 25;
+  const minT = dayData.temp_min || 18;
+  const weather = dayData.weather_day || '多云';
+  const windDir = dayData.wind_dir_day || '东南风';
+  const windScale = dayData.wind_scale_day || 2;
+  const pressure = 1000 + Math.round(Math.random() * 25); // 模拟气压
+  const hours = [];
+  for (let h = 0; h < 24; h++) {
+    // 温度按正弦曲线：凌晨最低，下午最高
+    const t = minT + (maxT - minT) * Math.max(0, Math.sin((h - 4) / 12 * Math.PI));
+    const temp = Math.round(t * 10) / 10;
+    const hWeather = (h >= 0 && h <= 5) ? dayData.weather_night || weather : weather;
+    hours.push({
+      hour: h,
+      time: String(h).padStart(2, '0') + ':00',
+      weather: hWeather,
+      temperature: temp,
+      pressure: Math.round(pressure + Math.sin(h / 12 * Math.PI) * 3),
+      wind_dir: windDir,
+      wind_scale: Math.max(1, windScale + Math.round((Math.random() - 0.5) * 1)),
+      waterTemp: Math.round(temp * 0.85 * 10) / 10,
+      oxygen: Math.round((4 + Math.random() * 3) * 10) / 10
+    });
+  }
+  return hours;
+}
+
+function calcHourlyFishScore(h, species) {
+  let score = 60; // 基准
+  // 温度适宜度
+  const [tMin, tMax] = species.temp;
+  if (h.temperature >= tMin && h.temperature <= tMax) score += 12;
+  else if (h.temperature >= tMin - 3 && h.temperature <= tMax + 3) score += 5;
+  else score -= 8;
+  // 气压
+  if (h.pressure >= 1008 && h.pressure <= 1018) score += 10;
+  else if (h.pressure >= 1005 && h.pressure < 1008) score += 5;
+  else score -= 5;
+  // 风力
+  if (h.wind_scale <= 2) score += 8;
+  else if (h.wind_scale <= 3) score += 4;
+  else if (h.wind_scale <= 4) score -= 3;
+  else score -= 10;
+  // 降水
+  const rain = /雨|雪/.test(h.weather);
+  if (h.weather === '中雨' || h.weather === '大雨' || h.weather === '雷阵雨') score -= 12;
+  else if (h.weather === '小雨') score -= 5;
+  else if (rain) score -= 3;
+  else score += 4;
+  // 时间段（清晨/黄昏加分）
+  if (h.hour >= 5 && h.hour <= 8) score += 8;
+  else if (h.hour >= 17 && h.hour <= 20) score += 6;
+  else if (h.hour >= 11 && h.hour <= 15) score -= 3;
+  else if (h.hour >= 0 && h.hour <= 4) score -= 5;
+  // 路亚/海钓 对活跃时段更敏感
+  if (fishState.mode === 'lure' && (h.hour >= 5 && h.hour <= 8 || h.hour >= 17 && h.hour <= 20)) score += 3;
+  if (fishState.mode === 'sea' && (h.hour >= 6 && h.hour <= 9 || h.hour >= 16 && h.hour <= 19)) score += 3;
+  return Math.max(0, Math.min(100, score));
+}
+
+function getScoreLevel(score) {
+  if (score >= 80) return { cls: 'excellent', text: '爆护' };
+  if (score >= 65) return { cls: 'good', text: '有口' };
+  if (score >= 45) return { cls: 'fair', text: '口差' };
+  return { cls: 'poor', text: '空军' };
+}
+
+function renderFishIndexTable() {
+  if (!window._currentWeatherData || !window._currentWeatherData.forecast) return;
+  const data = window._currentWeatherData;
+  const days = padForecastTo15Days(data.forecast);
+  const day = days[fishState.dayIndex] || days[0];
+  const speciesList = FISH_SPECIES_DATA[fishState.mode];
+  const species = speciesList.find(s => s.key === fishState.speciesKey) || speciesList[0];
+  const hourly = generateDayHourly(day, data.hourly_forecast);
+  const iconMap = { '晴':'☀️','多云':'⛅','阴':'☁️','小雨':'🌧️','中雨':'🌧️','大雨':'🌧️','雷阵雨':'⛈️','小雪':'🌨️','中雪':'🌨️','大雪':'❄️','雾':'🌫️','晴间多云':'🌤️' };
+  const tbody = document.getElementById('fish-index-body');
+  tbody.innerHTML = hourly.map(h => {
+    const score = calcHourlyFishScore(h, species);
+    const level = getScoreLevel(score);
+    const icon = iconMap[h.weather] || '🌤️';
+    return '<tr>' +
+      '<td class="ft-time">' + h.time + '</td>' +
+      '<td><div class="ft-weather"><span class="ft-icon">' + icon + '</span><span class="ft-desc">' + h.weather + '</span></div></td>' +
+      '<td class="ft-temp">' + h.temperature + '°</td>' +
+      '<td class="ft-pressure">' + h.pressure + '</td>' +
+      '<td class="ft-wind">' + h.wind_dir + '<br>' + h.wind_scale + '级</td>' +
+      '<td><span class="ft-score ' + level.cls + '">' + score + '<span class="ft-tag">' + level.text + '</span></span></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function renderFishIndex(data) {
+  if (!data || !data.forecast) return;
+  window._currentWeatherData = data;
+  renderFishSpecies();
+  renderFishDates(data.forecast);
+  renderFishIndexTable();
 }
 
 // ==================== 地点管理 ====================
