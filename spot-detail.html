@@ -209,7 +209,18 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',
 </div>
 
 <script>
-const API = window.location.origin + '/api';
+// ===== API Base Configuration =====
+function getApiBase(){
+  const saved = localStorage.getItem('apiBase');
+  if(saved) return saved;
+  const host = window.location.hostname;
+  const protocol = window.location.protocol;
+  if(protocol === 'file:' || host === 'localhost' || host === '127.0.0.1'){
+    return (host === 'localhost' || host === '127.0.0.1') ? window.location.origin + '/api' : 'http://localhost:3456/api';
+  }
+  return 'http://localhost:3456/api';
+}
+const API = getApiBase();
 const token = localStorage.getItem('token') || '';
 const spotId = new URLSearchParams(window.location.search).get('id');
 let spotData = null;

@@ -150,7 +150,20 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',
 <div class="toast" id="toast"></div>
 
 <script>
-const API_BASE = '/api/auth';
+// ===== API Base Configuration =====
+function getApiBase(){
+  const saved = localStorage.getItem('apiBase');
+  if(saved) return saved;
+  const host = window.location.hostname;
+  const protocol = window.location.protocol;
+  if(protocol === 'file:' || host === 'localhost' || host === '127.0.0.1'){
+    return (host === 'localhost' || host === '127.0.0.1') ? window.location.origin + '/api' : 'http://localhost:3456/api';
+  }
+  // 部署到 GitHub Pages 等静态托管时，默认回退到本地后端（运行后端后测试用）
+  // 如需正式托管后端，请在 localStorage 中设置 apiBase，例如：localStorage.setItem('apiBase','https://your-api.com/api')
+  return 'http://localhost:3456/api';
+}
+const API_BASE = getApiBase() + '/auth';
 
 // ===== Tab Switch =====
 function switchTab(tab){
@@ -187,6 +200,14 @@ function showToast(msg,type='info'){
   t.textContent=msg;t.className='toast '+type+' show';
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ===== Friendly Fetch Error =====
+function friendlyError(err){
+  if(err.name==='TypeError' || err.message==='Failed to fetch' || /fetch/i.test(err.message)){
+    return '无法连接后端服务，请确认已运行 backend/server.js（端口3456）';
+  }
+  return err.message;
 }
 
 // ===== Set Loading =====
@@ -228,7 +249,7 @@ async function handleLogin(e){
     showToast('登录成功','success');
     setTimeout(()=>{window.location.href=getRedirect()},800);
   }catch(err){
-    showToast(err.message,'error');
+    showToast(friendlyError(err),'error');
     setLoading('loginBtn',false);
   }
 }
@@ -261,7 +282,7 @@ async function handleRegister(e){
     showToast('注册成功，欢迎加入！','success');
     setTimeout(()=>{window.location.href=getRedirect()},800);
   }catch(err){
-    showToast(err.message,'error');
+    showToast(friendlyError(err),'error');
     setLoading('regBtn',false);
   }
 }
