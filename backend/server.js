@@ -1184,6 +1184,11 @@ app.put('/api/admin/users/:id', authRequired, superAdminRequired, (req, res) => 
   res.json({ success: true });
 });
 
+// ============ 健康检查 (Render 必需) ============
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime(), timestamp: Date.now() });
+});
+
 // ============ 辅助 ============
 function safeJSON(str) {
   try { return JSON.parse(str); } catch (e) { return []; }

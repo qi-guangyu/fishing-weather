@@ -1,7 +1,11 @@
 {
-  "name": "fishing-spot-backend",
+  "name": "fishing-weather-backend",
   "version": "1.0.0",
+  "description": "钓鱼天气小程序后端服务",
   "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
