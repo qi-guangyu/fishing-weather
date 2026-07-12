@@ -1,0 +1,48 @@
+<view class="profile-page">
+  <!-- 用户头部 -->
+  <view class="profile-header">
+    <block wx:if="{{isLoggedIn}}">
+      <view class="avatar">{{userInfo.avatar ? '' : '🎣'}}</view>
+      <image wx:if="{{userInfo.avatar}}" class="avatar-img" src="{{userInfo.avatar}}" mode="aspectFill" />
+      <view class="username">{{userInfo.username || '钓鱼爱好者'}}</view>
+      <view class="user-sub">当前城市：{{currentCity}}</view>
+    </block>
+    <block wx:else>
+      <view class="avatar">🎣</view>
+      <view class="username">未登录</view>
+      <view class="user-sub">登录后可同步数据到云端</view>
+      <view class="login-btn" bindtap="goLogin">微信登录</view>
+    </block>
+  </view>
+
+  <!-- 菜单列表 -->
+  <view class="menu-list">
+    <view class="menu-item" bindtap="switchCity">
+      <view class="mi-icon" style="background:#e0f2fe">🌍</view>
+      <text class="mi-label">切换城市</text>
+      <text class="mi-value">{{currentCity}}</text>
+      <text class="mi-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="showAbout">
+      <view class="mi-icon" style="background:#fef3c7">ℹ️</view>
+      <text class="mi-label">关于钓鱼气象</text>
+      <text class="mi-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="clearCache">
+      <view class="mi-icon" style="background:#dbeafe">🗑️</view>
+      <text class="mi-label">清除缓存</text>
+      <text class="mi-arrow">›</text>
+    </view>
+    <view class="menu-item" wx:if="{{isLoggedIn}}" bindtap="handleLogout">
+      <view class="mi-icon" style="background:#fee2e2">🚪</view>
+      <text class="mi-label">退出登录</text>
+      <text class="mi-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 底部信息 -->
+  <view class="footer-info">
+    <text>数据来源：和风天气</text>
+    <text class="version">钓鱼气象 v1.0.0</text>
+  </view>
+</view>

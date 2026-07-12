@@ -1,0 +1,62 @@
+/* ==================== 全局样式 ==================== */
+page {
+  background: #0a0e1a;
+  color: #f1f5f9;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+/* 主题变量（WXSS不支持CSS变量，用class替代） */
+.container {
+  background: linear-gradient(160deg, #0f172a 0%, #1a1f35 50%, #0f172a 100%);
+  min-height: 100vh;
+  position: relative;
+}
+
+/* 卡片 */
+.card {
+  background: rgba(255,255,255,0.08);
+  border-radius: 32rpx;
+  padding: 32rpx;
+  margin: 24rpx 32rpx;
+  border: 1rpx solid rgba(255,255,255,0.1);
+  box-shadow: 0 16rpx 64rpx rgba(0,0,0,0.3);
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  margin-bottom: 28rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+/* 评分标签 */
+.tag-excellent { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+.tag-good { background: rgba(26,115,232,0.2); color: #93c5fd; }
+.tag-poor { background: rgba(245,158,11,0.2); color: #fcd34d; }
+.tag-bad { background: rgba(239,68,68,0.2); color: #fca5a5; }
+
+/* 文字颜色 */
+.text-primary { color: #1a73e8; }
+.text-secondary { color: rgba(241,245,249,0.65); }
+.text-light { color: rgba(241,245,249,0.4); }
+.text-success { color: #10b981; }
+.text-warning { color: #f59e0b; }
+.text-danger { color: #ef4444; }
+.text-gold { color: #fbbf24; }
+.text-blue { color: #60a5fa; }
+
+/* 通用动画 */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(32rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+/* 滚动隐藏滚动条 */
+::-webkit-scrollbar { display: none; }

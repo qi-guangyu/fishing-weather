@@ -16,6 +16,9 @@ const fs = require('fs');
 // ============ 配置 ============
 const PORT = process.env.PORT || 3456;
 const JWT_SECRET = process.env.JWT_SECRET || 'fishing-spot-secret-key-2026';
+// 微信小程序配置（部署到Render时设置环境变量）
+const WECHAT_APPID = process.env.WECHAT_APPID || '';
+const WECHAT_SECRET = process.env.WECHAT_SECRET || '';
 const UPLOAD_DIR = path.join(__dirname, 'data', 'uploads');
 const DB_PATH = path.join(__dirname, 'data', 'fishing.db');
 const QWEATHER_KEY = '195df4dbb8574d3dbbf024de1e1230b7';
@@ -170,7 +173,8 @@ async function initDatabase() {
       id TEXT PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
       nickname TEXT,
-      password_hash TEXT NOT NULL,
+      password_hash TEXT DEFAULT '',
+      wechat_openid TEXT,
       avatar TEXT,
       role TEXT DEFAULT 'user' CHECK(role IN ('super_admin','admin','user')),
       status TEXT DEFAULT 'active' CHECK(status IN ('active','banned')),
@@ -310,6 +314,12 @@ async function initDatabase() {
   sqlDb.run('CREATE INDEX IF NOT EXISTS idx_catches_spot ON catches(spot_id)');
   sqlDb.run('CREATE INDEX IF NOT EXISTS idx_comments_spot ON comments(spot_id)');
   sqlDb.run('CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status)');
+
+  // 迁移：为已有数据库添加 wechat_openid 列
+  try {
+    sqlDb.run('ALTER TABLE users ADD COLUMN wechat_openid TEXT');
+    console.log('[DB] 已添加 wechat_openid 列');
+  } catch(e) { /* 列已存在，忽略 */ }
 
   __saveDbNow();
 
@@ -519,6 +529,40 @@ app.post('/api/auth/login', (req, res) => {
 
 app.get('/api/auth/me', authRequired, (req, res) => {
   res.json({ user: req.user });
+});
+
+// ---------- 微信小程序登录 ----------
+app.post('/api/auth/wechat-login', async (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: '缺少code参数' });
+  try {
+    // 调用微信API换取openid
+    const https = require('https');
+    const wxApiUrl = 'https://api.weixin.qq.com/sns/jscode2session?appid=' + WECHAT_APPID +
+      '&secret=' + WECHAT_SECRET + '&js_code=' + code + '&grant_type=authorization_code';
+    const wxResp = await new Promise((resolve, reject) => {
+      https.get(wxApiUrl, (resp) => {
+        let data = '';
+        resp.on('data', (chunk) => data += chunk);
+        resp.on('end', () => resolve(JSON.parse(data)));
+      }).on('error', reject);
+    });
+    if (!wxResp.openid) return res.status(401).json({ error: '微信登录失败: ' + (wxResp.errmsg || '未知错误') });
+
+    // 查找或创建用户
+    let user = dbWrap.prepare('SELECT * FROM users WHERE wechat_openid = ?').get(wxResp.openid);
+    if (!user) {
+      const id = uuidv4();
+      const username = 'wx_' + wxResp.openid.slice(-8);
+      dbWrap.prepare('INSERT INTO users (id, username, nickname, password_hash, wechat_openid) VALUES (?,?,?,?,?)')
+        .run(id, username, '微信用户', '', wxResp.openid);
+      user = dbWrap.prepare('SELECT * FROM users WHERE id = ?').get(id);
+    }
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, user: { id: user.id, username: user.username, nickname: user.nickname, role: user.role } });
+  } catch (e) {
+    res.status(500).json({ error: '微信登录异常: ' + e.message });
+  }
 });
 
 // ---------- 地区接口 ----------
