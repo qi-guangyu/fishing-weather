@@ -29,32 +29,31 @@
   <!-- 24小时逐时预报 -->
   <view class="card animate-in" style="animation-delay:0.15s">
     <view class="section-title"><text>🕐</text> 24小时逐时预报</view>
-    <scroll-view scroll-x class="hourly-scroll">
-      <view class="hourly-table">
-        <view class="hourly-row hourly-header">
-          <text class="h-col-time">时间</text>
-          <text class="h-col-weather">天气</text>
-          <text class="h-col-temp">气温</text>
-          <text class="h-col-pressure">气压</text>
-          <text class="h-col-wind">风向</text>
-          <text class="h-col-wt">水温</text>
-          <text class="h-col-o2">水氧</text>
-          <text class="h-col-score">鱼口</text>
+    <scroll-view scroll-y class="hourly-scroll">
+      <view class="hourly-item hourly-header">
+        <text class="hi-col-time">时间</text>
+        <text class="hi-col-cond">天气·气温</text>
+        <text class="hi-col-detail">气压·风向·水温·水氧</text>
+        <text class="hi-col-score">鱼口</text>
+      </view>
+      <view class="hourly-item {{item.isNow ? 'hourly-active' : ''}}" wx:for="{{hourlyList}}" wx:key="index">
+        <view class="hi-col-time">
+          <text class="hi-time">{{item.timeLabel}}</text>
         </view>
-        <view class="hourly-row {{item.isNow ? 'hourly-active' : ''}}" wx:for="{{hourlyList}}" wx:key="index">
-          <text class="h-col-time">{{item.timeLabel}}</text>
-          <view class="h-col-weather">
-            <text class="h-icon">{{item.icon}}</text>
-            <text class="h-desc">{{item.weather}}</text>
-          </view>
-          <text class="h-col-temp">{{item.temperature}}°</text>
-          <text class="h-col-pressure">{{item.pressure}}</text>
-          <text class="h-col-wind">{{item.wind_dir}} {{item.wind_scale}}级</text>
-          <text class="h-col-wt">{{item.waterTemp}}°</text>
-          <text class="h-col-o2">{{item.oxygen}}</text>
-          <view class="h-col-score">
-            <text class="hi-score tag-{{item.tagClass}}">{{item.score}} {{item.tagText}}</text>
-          </view>
+        <view class="hi-col-cond">
+          <text class="h-icon">{{item.icon}}</text>
+          <text class="hi-temp">{{item.temperature}}°</text>
+          <text class="hi-desc">{{item.weather}}</text>
+        </view>
+        <view class="hi-col-detail">
+          <text>气压 {{item.pressure}}</text>
+          <text>{{item.wind_dir}} {{item.wind_scale}}级</text>
+          <text>水温 {{item.waterTemp}}°</text>
+          <text>水氧 {{item.oxygen}}</text>
+        </view>
+        <view class="hi-col-score">
+          <text class="hi-score tag-{{item.tagClass}}">{{item.score}}</text>
+          <text class="hi-score-text">{{item.tagText}}</text>
         </view>
       </view>
     </scroll-view>

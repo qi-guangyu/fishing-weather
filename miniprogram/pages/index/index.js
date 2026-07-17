@@ -191,7 +191,7 @@ Page({
       dataSource,
       weather: data,
       weatherGrid,
-      hourlyList: hourlyWithScore.slice(0, 12),
+      hourlyList: hourlyWithScore,
       forecast15: forecastCards,
       aiAdvice
     })
