@@ -1,0 +1,151 @@
+<!-- 钓鱼指数 页面 -->
+<view class="page-container">
+
+  <!-- 顶部栏 -->
+  <view class="top-bar">
+    <view class="location" bindtap="showCityPicker">
+      <text class="loc-icon">📍</text>
+      <text class="loc-text">{{cityDisplayName}}</text>
+      <text class="loc-arrow">▾</text>
+    </view>
+    <view class="actions">
+      <view class="action-btn" bindtap="getLocation">🎯</view>
+      <view class="action-btn" bindtap="refreshData">🔄</view>
+    </view>
+  </view>
+
+  <!-- 评分卡片 -->
+  <view class="score-card animate-in">
+    <view class="score-label">综合鱼口评分</view>
+    <view class="score-value">
+      <text class="score-num">{{score}}</text>
+      <text class="score-unit">分</text>
+    </view>
+    <view class="score-tag tag-{{scoreTag}}">{{scoreLevel}}</view>
+    <view class="best-time">🎯 今日最佳时段：{{bestTime}}</view>
+    <view class="data-source">{{dataSource}}</view>
+  </view>
+
+  <!-- 15天预报 -->
+  <view class="card animate-in" style="animation-delay:0.25s">
+    <view class="section-title"><text>📅</text> 15天预报</view>
+    <scroll-view scroll-x class="forecast-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="forecast-track">
+        <view class="day-card {{item.isActive ? 'day-active' : ''}}" wx:for="{{forecast15}}" wx:key="index">
+          <view class="day-date">
+            <text class="dd-week">{{item.dayLabel}}</text>
+            <text class="dd-day">{{item.dateStr}}</text>
+          </view>
+          <view class="day-weather">
+            <text class="dw-icon">{{item.icon}}</text>
+            <text class="dw-desc">{{item.weather_day}}</text>
+          </view>
+          <view class="day-temp">
+            <text class="dt-high">{{item.temp_max}}°</text>
+            <text class="dt-low">{{item.temp_min}}°</text>
+          </view>
+          <view class="day-wind">
+            <text>{{item.wind_dir_day}}</text>
+            <text>{{item.wind_scale_day}}级</text>
+          </view>
+          <view class="day-tags">
+            <view class="day-tag fish-score" style="color:{{item.scoreColor}};border-color:{{item.scoreColor}}">{{item.score}}</view>
+            <view class="day-tag comfort" style="color:{{item.comfortColor}};border-color:{{item.comfortColor}};background:{{item.comfortBg}}">{{item.comfortText}}</view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 钓鱼指数 -->
+  <view class="card animate-in" style="animation-delay:0.32s">
+    <view class="section-title"><text>🐟</text> 钓鱼指数</view>
+
+    <!-- 钓法切换 -->
+    <view class="fish-mode-tabs">
+      <view class="fish-mode {{fishMode === 'taiwan' ? 'fm-active' : ''}}" data-mode="taiwan" bindtap="switchFishMode">台钓</view>
+      <view class="fish-mode {{fishMode === 'lure' ? 'fm-active' : ''}}" data-mode="lure" bindtap="switchFishMode">路亚</view>
+      <view class="fish-mode {{fishMode === 'sea' ? 'fm-active' : ''}}" data-mode="sea" bindtap="switchFishMode">海钓</view>
+    </view>
+
+    <!-- 鱼种选择 -->
+    <scroll-view scroll-x class="fish-species-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="fish-species {{fishSpeciesKey === item.key ? 'fs-active' : ''}}" wx:for="{{fishSpeciesList}}" wx:key="key" data-key="{{item.key}}" bindtap="switchFishSpecies">
+        <text class="fs-icon">{{item.icon}}</text>
+        <text class="fs-name">{{item.name}}</text>
+      </view>
+    </scroll-view>
+
+    <!-- 日期选择 -->
+    <scroll-view scroll-x class="fish-date-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="fish-date {{fishDayIndex === index ? 'fd-active' : ''}}" wx:for="{{fishDates}}" wx:key="index" data-idx="{{index}}" bindtap="switchFishDay">
+        <text class="fd-day">{{item.dayLabel}}</text>
+        <text class="fd-date">{{item.dateStr}}</text>
+      </view>
+    </scroll-view>
+
+    <!-- 24小时鱼情表格 -->
+    <scroll-view scroll-x class="fish-table-wrap">
+      <view class="fish-table">
+        <view class="ft-row ft-header">
+          <text class="ft-time">时间</text>
+          <text class="ft-weather-h">天气</text>
+          <text class="ft-temp-h">气温</text>
+          <text class="ft-pressure-h">气压</text>
+          <text class="ft-wind-h">风</text>
+          <text class="ft-score-h">指数</text>
+        </view>
+        <view class="ft-row" wx:for="{{fishHourly}}" wx:key="index">
+          <text class="ft-time">{{item.time}}</text>
+          <view class="ft-weather">
+            <text class="ft-icon">{{item.icon}}</text>
+            <text class="ft-desc">{{item.weather}}</text>
+          </view>
+          <text class="ft-temp">{{item.temperature}}°</text>
+          <text class="ft-pressure">{{item.pressure}}</text>
+          <view class="ft-wind">
+            <text>{{item.wind_dir}}</text>
+            <text>{{item.wind_scale}}级</text>
+          </view>
+          <view class="ft-score ft-{{item.levelCls}}">
+            <text class="ft-score-num">{{item.score}}</text>
+            <text class="ft-score-tag">{{item.levelText}}</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- AI建议 -->
+  <view class="ai-suggestion animate-in" style="animation-delay:0.4s" wx:if="{{aiAdvice}}">
+    <view class="ai-header">🤖 AI 垂钓建议</view>
+    <view class="ai-text">
+      <view class="ai-title">{{aiAdvice.title}}</view>
+      <view class="ai-section">{{aiAdvice.approach}}</view>
+      <view class="ai-section">{{aiAdvice.tackle}}</view>
+      <view class="ai-section">{{aiAdvice.spot}}</view>
+    </view>
+  </view>
+
+  <view style="height:40rpx"></view>
+
+  <!-- 城市选择弹窗 -->
+  <view class="modal-overlay {{showCityPicker ? 'show' : ''}}" bindtap="hideCityPicker">
+    <view class="modal-panel" catchtap="">
+      <view class="modal-header">
+        <text class="modal-title">切换城市</text>
+        <view class="modal-close" bindtap="hideCityPicker">✕</view>
+      </view>
+      <view class="modal-body">
+        <input class="city-search-input" placeholder="搜索城市名称..." value="{{citySearchKey}}" bindinput="onCitySearch" />
+        <scroll-view scroll-y class="city-results">
+          <view class="city-result-item" wx:for="{{cityList}}" wx:key="name" data-city="{{item.name}}" bindtap="selectCity">
+            <text class="city-name">{{item.name}}</text>
+            <text class="city-province">{{item.province}}</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+  </view>
+
+</view>

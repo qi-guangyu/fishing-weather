@@ -9,18 +9,32 @@ Page({
     // 城市
     currentCity: '常熟',
     cityDisplayName: '定位中...',
-    // 实时天气
-    weather: {},
-    weatherGrid: [],
-    // 逐时预报
-    hourlyList: [],
+    // 评分
+    score: 0,
+    scoreLevel: '',
+    scoreTag: 'normal',
+    bestTime: '--:-- / --:--',
+    dataSource: '',
+    // 15天预报
+    forecast15: [],
+    // 钓鱼指数
+    fishMode: 'taiwan',
+    fishSpeciesList: [],
+    fishSpeciesKey: 'jiyu',
+    fishDates: [],
+    fishDayIndex: 0,
+    fishHourly: [],
+    // AI建议
+    aiAdvice: null,
     // 状态
     loading: true,
     isLoggedIn: false,
     // 城市列表
     cityList: [],
     showCityPicker: false,
-    citySearchKey: ''
+    citySearchKey: '',
+    // 天气数据
+    weatherData: null
   },
 
   onLoad() {
@@ -79,7 +93,20 @@ Page({
       cityDisplayName: (data.province ? data.province + '·' : '') + data.city
     })
 
-    // 逐时预报处理
+    // 计算综合评分
+    const tempDiff = data.forecast && data.forecast[0]
+      ? data.forecast[0].temp_max - data.forecast[0].temp_min : 6
+    const result = calcFishScore({
+      pressure: data.pressure,
+      temp: data.temperature,
+      tempDiff: tempDiff,
+      windScale: parseInt(data.wind_power) || 2,
+      precip: data.precipitation,
+      moon: 0.45,
+      hour: new Date().getHours()
+    })
+
+    // 逐时（仅用于计算最佳时段）
     const hourlyWithScore = (data.hourly_forecast || []).map(h => {
       let hour = -1
       try { hour = new Date(h.time).getHours() } catch (e) { }
@@ -89,36 +116,120 @@ Page({
         windScale: parseInt(h.wind_scale) || 2, precip: 0,
         moon: 0.45, hour
       }).score
+      return { hour, score }
+    })
+
+    // 最佳时段
+    let bestTime = '--:-- / --:--'
+    if (hourlyWithScore.length) {
+      const morning = hourlyWithScore.filter(h => h.hour >= 5 && h.hour <= 11)
+        .sort((a, b) => b.score - a.score)
+      const bestM = morning.length > 0 ? morning[0].hour : 6
+      const afternoon = hourlyWithScore.filter(h => h.hour >= 14 && h.hour <= 20)
+        .sort((a, b) => b.score - a.score)
+      const bestA = afternoon.length > 0 ? afternoon[0].hour : 17
+      bestTime = String(bestM).padStart(2, '0') + ':00-' + String(bestM + 2).padStart(2, '0') + ':00'
+        + ' / ' + String(bestA).padStart(2, '0') + ':00-' + String(bestA + 2).padStart(2, '0') + ':00'
+    }
+
+    // 数据来源标记
+    let dataSource = ''
+    if (data._isReal) {
+      dataSource = '✅ 和风天气·真实数据'
+    } else if (data._isMock) {
+      dataSource = '⚠️ 模拟数据（API不可用）'
+    }
+
+    // 15天预报
+    const forecast15 = weather.padForecastTo15Days(data.forecast || [])
+    const forecastCards = forecast15.map((d, i) => {
+      const avgTemp = (d.temp_max + d.temp_min) / 2
+      const score = calcFishScore({
+        pressure: null, temp: avgTemp, tempDiff: d.temp_max - d.temp_min,
+        windScale: parseInt(d.wind_scale_day) || 2, precip: 0,
+        moon: 0.45, hour: 7
+      }).score
       const st = getScoreTag(score)
-      const wt = Math.round((h.temperature || 25) * 0.85 * 10) / 10
-      const o2 = Math.round((4 + Math.random() * 3) * 10) / 10
+      const sc = score >= 80 ? '#16a34a' : score >= 60 ? '#2563eb' : score >= 40 ? '#d97706' : '#dc2626'
+      const comfort = weather.getComfortTag(d.temp_max, null)
       return {
-        ...h, hour, score, tagClass: st.tag, tagText: st.text,
-        waterTemp: wt, oxygen: o2,
-        icon: weather.getWeatherIcon(h.weather || h.text),
-        timeLabel: hour === new Date().getHours() ? '现在' : String(hour).padStart(2, '0') + ':00',
-        isNow: hour === new Date().getHours()
+        ...d,
+        dayLabel: weather.getDayLabel(i, d.date),
+        dateStr: d.date ? d.date.slice(5).replace('-', '/') : 'N/A',
+        icon: weather.getWeatherIcon(d.weather_day),
+        score, scoreColor: sc,
+        comfortText: comfort.text,
+        comfortColor: comfort.color,
+        comfortBg: comfort.bg,
+        isActive: i === 1
       }
     })
 
-    // 天气网格
-    const weatherGrid = [
-      { icon: '🌡️', label: '实时气温', value: (data.temperature != null ? data.temperature + '℃' : '--') },
-      { icon: '💧', label: '湿度', value: (data.humidity != null ? data.humidity + '%' : '--') },
-      { icon: '🌬️', label: '风向风力', value: (data.wind_direction || '--') + ' ' + (data.wind_power || '') },
-      { icon: '🌧️', label: '降雨量', value: (data.precipitation != null ? data.precipitation + 'mm' : '0.0mm') },
-      { icon: '☀️', label: '紫外线', value: data.uv != null ? (data.uv > 5 ? '强' : data.uv > 2 ? '中等' : '弱') : '--' },
-      { icon: '🔽', label: '实时气压', value: (data.pressure || '--') + 'hPa', highlight: true }
-    ]
+    // AI建议
+    const aiAdvice = getAIAdvice(data, result.score)
 
     this.setData({
-      weather: data,
-      weatherGrid,
-      hourlyList: hourlyWithScore.slice(0, 12)
+      score: result.score,
+      scoreLevel: result.level,
+      scoreTag: result.tag,
+      bestTime,
+      dataSource,
+      forecast15,
+      aiAdvice,
+      // 钓鱼指数
+      fishSpeciesList: weather.FISH_SPECIES_DATA[this.data.fishMode],
+      fishDates: forecast15.map((d, i) => ({
+        dayLabel: weather.getDayLabel(i, d.date),
+        dateStr: d.date ? d.date.slice(5).replace('-', '/') : 'N/A'
+      }))
     })
+
+    // 渲染钓鱼指数表格
+    this.renderFishIndexTable()
   },
 
-  // 钓鱼指数模块（钓法/鱼种/日期切换 + 24h鱼情表）已迁移至 pages/fish-index
+  // ==================== 钓鱼指数模块 ====================
+  switchFishMode(e) {
+    const mode = e.currentTarget.dataset.mode
+    this.setData({
+      fishMode: mode,
+      fishSpeciesKey: weather.FISH_SPECIES_DATA[mode][0].key,
+      fishSpeciesList: weather.FISH_SPECIES_DATA[mode]
+    })
+    this.renderFishIndexTable()
+  },
+
+  switchFishSpecies(e) {
+    this.setData({ fishSpeciesKey: e.currentTarget.dataset.key })
+    this.renderFishIndexTable()
+  },
+
+  switchFishDay(e) {
+    this.setData({ fishDayIndex: e.currentTarget.dataset.idx })
+    this.renderFishIndexTable()
+  },
+
+  renderFishIndexTable() {
+    const data = this.data.weatherData
+    if (!data || !data.forecast) return
+    const days = weather.padForecastTo15Days(data.forecast)
+    const day = days[this.data.fishDayIndex] || days[0]
+    const speciesList = weather.FISH_SPECIES_DATA[this.data.fishMode]
+    const species = speciesList.find(s => s.key === this.data.fishSpeciesKey) || speciesList[0]
+    const hourly = weather.generateDayHourly(day)
+    const fishHourly = hourly.map(h => {
+      const score = weather.calcHourlyFishScore(h, species, this.data.fishMode)
+      const level = weather.getScoreLevel(score)
+      return {
+        ...h,
+        score,
+        levelCls: level.cls,
+        levelText: level.text,
+        icon: weather.getWeatherIcon(h.weather)
+      }
+    })
+    this.setData({ fishHourly })
+  },
 
   // ==================== 城市选择 ====================
   showCityPicker() {
@@ -162,7 +273,6 @@ Page({
     wx.getLocation({
       type: 'wgs84',
       success: (res) => {
-        // 简单匹配最近城市
         const cities = Object.entries(weather.cityCoords)
         let nearest = cities[0]
         let minDist = Infinity

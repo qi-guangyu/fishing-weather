@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/fish-index/fish-index",
     "pages/login/login",
     "pages/profile/profile"
   ],
@@ -23,6 +24,12 @@
         "text": "气象",
         "iconPath": "assets/tab-weather.png",
         "selectedIconPath": "assets/tab-weather-active.png"
+      },
+      {
+        "pagePath": "pages/fish-index/fish-index",
+        "text": "钓鱼指数",
+        "iconPath": "assets/tab-fish.png",
+        "selectedIconPath": "assets/tab-fish-active.png"
       },
       {
         "pagePath": "pages/profile/profile",
