@@ -1,0 +1,53 @@
+<!-- 钓点推荐页面 -->
+<view class="page-container">
+
+  <!-- 顶部栏 -->
+  <view class="top-bar">
+    <view class="location">
+      <text class="loc-icon">📍</text>
+      <text class="loc-text">{{cityDisplayName}}</text>
+    </view>
+    <view class="actions">
+      <view class="action-btn" bindtap="getLocation">🎯</view>
+      <view class="action-btn" bindtap="refreshData">🔄</view>
+    </view>
+  </view>
+
+  <!-- 实时天气摘要 -->
+  <view class="weather-hero animate-in" style="margin-top:8rpx">
+    <view class="wh-left">
+      <view class="wh-label">📡 实时实况</view>
+      <view class="wh-temp-row">
+        <text class="wh-temp">{{weather.temperature}}</text>
+        <text class="wh-temp-unit">°C</text>
+      </view>
+      <view class="wh-desc">{{weather.weather}}</view>
+    </view>
+    <view class="wh-right">
+      <text class="wh-emoji">🎣</text>
+    </view>
+  </view>
+
+  <!-- 综合评分 -->
+  <view class="score-card animate-in" style="animation-delay:0.1s">
+    <view class="score-label">综合鱼口评分</view>
+    <view class="score-value">
+      <text class="score-num">{{score}}</text>
+      <text class="score-unit">分</text>
+    </view>
+    <view class="score-tag tag-{{scoreTag}}">{{scoreLevel}}</view>
+    <view class="score-bar"><view class="score-bar-fill" style="width:{{score}}%"></view></view>
+  </view>
+
+  <!-- 钓点推荐 -->
+  <view class="ai-suggestion animate-in" style="animation-delay:0.15s" wx:if="{{aiAdvice}}">
+    <view class="ai-header">📍 钓点推荐</view>
+    <view class="ai-text">
+      <view class="ai-title">{{aiAdvice.title}}</view>
+      <view class="ai-section">{{aiAdvice.spot}}</view>
+    </view>
+  </view>
+
+  <view style="height:40rpx"></view>
+
+</view>

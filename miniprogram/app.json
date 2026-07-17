@@ -2,6 +2,7 @@
   "pages": [
     "pages/index/index",
     "pages/fish-index/fish-index",
+    "pages/spots/spots",
     "pages/login/login",
     "pages/profile/profile"
   ],
@@ -30,6 +31,12 @@
         "text": "钓鱼指数",
         "iconPath": "assets/tab-fish.png",
         "selectedIconPath": "assets/tab-fish-active.png"
+      },
+      {
+        "pagePath": "pages/spots/spots",
+        "text": "钓点",
+        "iconPath": "assets/tab-spots.png",
+        "selectedIconPath": "assets/tab-spots-active.png"
       },
       {
         "pagePath": "pages/profile/profile",
