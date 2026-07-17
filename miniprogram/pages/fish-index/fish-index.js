@@ -1,5 +1,5 @@
 const weather = require('../../utils/weather')
-const { fetchWeather, calcFishScore, getScoreTag, getAIAdvice } = weather
+const { fetchWeather } = weather
 const { isLoggedIn } = require('../../utils/auth')
 
 const app = getApp()
@@ -9,14 +9,6 @@ Page({
     // 城市
     currentCity: '常熟',
     cityDisplayName: '定位中...',
-    // 评分
-    score: 0,
-    scoreLevel: '',
-    scoreTag: 'normal',
-    bestTime: '--:-- / --:--',
-    dataSource: '',
-    // 15天预报
-    forecast15: [],
     // 钓鱼指数
     fishMode: 'taiwan',
     fishSpeciesList: [],
@@ -24,8 +16,6 @@ Page({
     fishDates: [],
     fishDayIndex: 0,
     fishHourly: [],
-    // AI建议
-    aiAdvice: null,
     // 状态
     loading: true,
     isLoggedIn: false,
@@ -86,97 +76,15 @@ Page({
 
   // ==================== 处理天气数据 ====================
   processWeatherData(data) {
-    this.setData({ weatherData: data, loading: false })
-
-    // 城市显示
     this.setData({
+      weatherData: data,
+      loading: false,
       cityDisplayName: (data.province ? data.province + '·' : '') + data.city
     })
 
-    // 计算综合评分
-    const tempDiff = data.forecast && data.forecast[0]
-      ? data.forecast[0].temp_max - data.forecast[0].temp_min : 6
-    const result = calcFishScore({
-      pressure: data.pressure,
-      temp: data.temperature,
-      tempDiff: tempDiff,
-      windScale: parseInt(data.wind_power) || 2,
-      precip: data.precipitation,
-      moon: 0.45,
-      hour: new Date().getHours()
-    })
-
-    // 逐时（仅用于计算最佳时段）
-    const hourlyWithScore = (data.hourly_forecast || []).map(h => {
-      let hour = -1
-      try { hour = new Date(h.time).getHours() } catch (e) { }
-      if (isNaN(hour) || hour < 0) hour = new Date().getHours()
-      const score = calcFishScore({
-        pressure: h.pressure, temp: h.temperature, tempDiff: 6,
-        windScale: parseInt(h.wind_scale) || 2, precip: 0,
-        moon: 0.45, hour
-      }).score
-      return { hour, score }
-    })
-
-    // 最佳时段
-    let bestTime = '--:-- / --:--'
-    if (hourlyWithScore.length) {
-      const morning = hourlyWithScore.filter(h => h.hour >= 5 && h.hour <= 11)
-        .sort((a, b) => b.score - a.score)
-      const bestM = morning.length > 0 ? morning[0].hour : 6
-      const afternoon = hourlyWithScore.filter(h => h.hour >= 14 && h.hour <= 20)
-        .sort((a, b) => b.score - a.score)
-      const bestA = afternoon.length > 0 ? afternoon[0].hour : 17
-      bestTime = String(bestM).padStart(2, '0') + ':00-' + String(bestM + 2).padStart(2, '0') + ':00'
-        + ' / ' + String(bestA).padStart(2, '0') + ':00-' + String(bestA + 2).padStart(2, '0') + ':00'
-    }
-
-    // 数据来源标记
-    let dataSource = ''
-    if (data._isReal) {
-      dataSource = '✅ 和风天气·真实数据'
-    } else if (data._isMock) {
-      dataSource = '⚠️ 模拟数据（API不可用）'
-    }
-
-    // 15天预报
+    // 仅生成钓鱼指数所需数据（鱼情表按日切换依赖 15 天日期）
     const forecast15 = weather.padForecastTo15Days(data.forecast || [])
-    const forecastCards = forecast15.map((d, i) => {
-      const avgTemp = (d.temp_max + d.temp_min) / 2
-      const score = calcFishScore({
-        pressure: null, temp: avgTemp, tempDiff: d.temp_max - d.temp_min,
-        windScale: parseInt(d.wind_scale_day) || 2, precip: 0,
-        moon: 0.45, hour: 7
-      }).score
-      const st = getScoreTag(score)
-      const sc = score >= 80 ? '#16a34a' : score >= 60 ? '#2563eb' : score >= 40 ? '#d97706' : '#dc2626'
-      const comfort = weather.getComfortTag(d.temp_max, null)
-      return {
-        ...d,
-        dayLabel: weather.getDayLabel(i, d.date),
-        dateStr: d.date ? d.date.slice(5).replace('-', '/') : 'N/A',
-        icon: weather.getWeatherIcon(d.weather_day),
-        score, scoreColor: sc,
-        comfortText: comfort.text,
-        comfortColor: comfort.color,
-        comfortBg: comfort.bg,
-        isActive: i === 1
-      }
-    })
-
-    // AI建议
-    const aiAdvice = getAIAdvice(data, result.score)
-
     this.setData({
-      score: result.score,
-      scoreLevel: result.level,
-      scoreTag: result.tag,
-      bestTime,
-      dataSource,
-      forecast15,
-      aiAdvice,
-      // 钓鱼指数
       fishSpeciesList: weather.FISH_SPECIES_DATA[this.data.fishMode],
       fishDates: forecast15.map((d, i) => ({
         dayLabel: weather.getDayLabel(i, d.date),

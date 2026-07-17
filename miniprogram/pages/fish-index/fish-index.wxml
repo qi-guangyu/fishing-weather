@@ -14,51 +14,8 @@
     </view>
   </view>
 
-  <!-- 评分卡片 -->
-  <view class="score-card animate-in">
-    <view class="score-label">综合鱼口评分</view>
-    <view class="score-value">
-      <text class="score-num">{{score}}</text>
-      <text class="score-unit">分</text>
-    </view>
-    <view class="score-tag tag-{{scoreTag}}">{{scoreLevel}}</view>
-    <view class="best-time">🎯 今日最佳时段：{{bestTime}}</view>
-    <view class="data-source">{{dataSource}}</view>
-  </view>
-
-  <!-- 15天预报 -->
-  <view class="card animate-in" style="animation-delay:0.25s">
-    <view class="section-title"><text>📅</text> 15天预报</view>
-    <scroll-view scroll-x class="forecast-scroll" enhanced show-scrollbar="{{false}}">
-      <view class="forecast-track">
-        <view class="day-card {{item.isActive ? 'day-active' : ''}}" wx:for="{{forecast15}}" wx:key="index">
-          <view class="day-date">
-            <text class="dd-week">{{item.dayLabel}}</text>
-            <text class="dd-day">{{item.dateStr}}</text>
-          </view>
-          <view class="day-weather">
-            <text class="dw-icon">{{item.icon}}</text>
-            <text class="dw-desc">{{item.weather_day}}</text>
-          </view>
-          <view class="day-temp">
-            <text class="dt-high">{{item.temp_max}}°</text>
-            <text class="dt-low">{{item.temp_min}}°</text>
-          </view>
-          <view class="day-wind">
-            <text>{{item.wind_dir_day}}</text>
-            <text>{{item.wind_scale_day}}级</text>
-          </view>
-          <view class="day-tags">
-            <view class="day-tag fish-score" style="color:{{item.scoreColor}};border-color:{{item.scoreColor}}">{{item.score}}</view>
-            <view class="day-tag comfort" style="color:{{item.comfortColor}};border-color:{{item.comfortColor}};background:{{item.comfortBg}}">{{item.comfortText}}</view>
-          </view>
-        </view>
-      </view>
-    </scroll-view>
-  </view>
-
   <!-- 钓鱼指数 -->
-  <view class="card animate-in" style="animation-delay:0.32s">
+  <view class="card animate-in">
     <view class="section-title"><text>🐟</text> 钓鱼指数</view>
 
     <!-- 钓法切换 -->
@@ -114,17 +71,6 @@
         </view>
       </view>
     </scroll-view>
-  </view>
-
-  <!-- AI建议 -->
-  <view class="ai-suggestion animate-in" style="animation-delay:0.4s" wx:if="{{aiAdvice}}">
-    <view class="ai-header">🤖 AI 垂钓建议</view>
-    <view class="ai-text">
-      <view class="ai-title">{{aiAdvice.title}}</view>
-      <view class="ai-section">{{aiAdvice.approach}}</view>
-      <view class="ai-section">{{aiAdvice.tackle}}</view>
-      <view class="ai-section">{{aiAdvice.spot}}</view>
-    </view>
   </view>
 
   <view style="height:40rpx"></view>
