@@ -45,32 +45,13 @@
   <!-- 24小时逐时预报 -->
   <view class="card animate-in" style="animation-delay:0.15s">
     <view class="section-title"><text>🕐</text> 24小时逐时预报</view>
-    <scroll-view scroll-y class="hourly-scroll">
-      <view class="hourly-item hourly-header">
-        <text class="hi-col-time">时间</text>
-        <text class="hi-col-cond">天气·气温</text>
-        <text class="hi-col-detail">气压·风向·水温·水氧</text>
-        <text class="hi-col-score">鱼口</text>
-      </view>
-      <view class="hourly-item {{item.isNow ? 'hourly-active' : ''}}" wx:for="{{hourlyList}}" wx:key="index">
-        <view class="hi-col-time">
-          <text class="hi-time">{{item.timeLabel}}</text>
-          <text wx:if="{{item.isNow}}" class="hi-now-tag">现在</text>
-        </view>
-        <view class="hi-col-cond">
-          <text class="h-icon">{{item.icon}}</text>
-          <text class="hi-temp">{{item.temperature}}°</text>
-          <text class="hi-desc">{{item.weather}}</text>
-        </view>
-        <view class="hi-col-detail">
-          <text>气压 {{item.pressure}}</text>
-          <text>{{item.wind_dir}} {{item.wind_scale}}级</text>
-          <text>水温 {{item.waterTemp}}°</text>
-          <text>水氧 {{item.oxygen}}</text>
-        </view>
-        <view class="hi-col-score">
-          <text class="hi-score tag-{{item.tagClass}}">{{item.score}}</text>
-          <text class="hi-score-text">{{item.tagText}}</text>
+    <scroll-view scroll-x class="hourly-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="hourly-track">
+        <view class="hourly-card {{item.isNow ? 'hourly-now' : ''}}" wx:for="{{hourlyList}}" wx:key="index">
+          <text class="hc-time">{{item.timeLabel}}{{item.isNow ? ' ·现在' : ''}}</text>
+          <text class="hc-icon">{{item.icon}}</text>
+          <text class="hc-temp">{{item.temperature}}°</text>
+          <view class="hc-score tag-{{item.tagClass}}">{{item.score}} {{item.tagText}}</view>
         </view>
       </view>
     </scroll-view>
