@@ -45,13 +45,33 @@
   <!-- 24小时逐时预报 -->
   <view class="card animate-in" style="animation-delay:0.15s">
     <view class="section-title"><text>🕐</text> 24小时逐时预报</view>
-    <scroll-view scroll-x class="hourly-scroll" enhanced show-scrollbar="{{false}}">
-      <view class="hourly-track">
-        <view class="hourly-card {{item.isNow ? 'hourly-now' : ''}}" wx:for="{{hourlyList}}" wx:key="index">
-          <text class="hc-time">{{item.timeLabel}}{{item.isNow ? ' ·现在' : ''}}</text>
-          <text class="hc-icon">{{item.icon}}</text>
-          <text class="hc-temp">{{item.temperature}}°</text>
-          <view class="hc-score tag-{{item.tagClass}}">{{item.score}} {{item.tagText}}</view>
+    <scroll-view scroll-y class="hourly-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="hourly-table">
+        <view class="hourly-row hourly-header">
+          <text class="ht-col-time">时间</text>
+          <text class="ht-col-weather">天气</text>
+          <text class="ht-col-temp">气温</text>
+          <text class="ht-col-pressure">气压</text>
+          <text class="ht-col-wind">风</text>
+          <text class="ht-col-watertemp">水温</text>
+          <text class="ht-col-oxygen">水氧</text>
+          <text class="ht-col-score">指数</text>
+        </view>
+        <view class="hourly-row {{item.isNow ? 'hourly-now' : ''}}" wx:for="{{hourlyList}}" wx:key="index">
+          <text class="ht-col-time">{{item.timeLabel}}</text>
+          <view class="ht-col-weather">
+            <text class="ht-weather-icon">{{item.icon}}</text>
+            <text class="ht-weather-text">{{item.weather}}</text>
+          </view>
+          <text class="ht-col-temp">{{item.temperature}}°</text>
+          <text class="ht-col-pressure">{{item.pressure}}</text>
+          <text class="ht-col-wind">{{item.wind_dir}} {{item.wind_scale}}级</text>
+          <text class="ht-col-watertemp">{{item.waterTemp}}°</text>
+          <text class="ht-col-oxygen">{{item.oxygen}}</text>
+          <view class="ht-col-score tag-{{item.tagClass}}">
+            <text class="ht-score-num">{{item.score}}</text>
+            <text class="ht-score-text">{{item.tagText}}</text>
+          </view>
         </view>
       </view>
     </scroll-view>

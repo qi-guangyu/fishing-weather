@@ -64,28 +64,35 @@
 }
 .data-source { font-size: 22rpx; color: #647489; margin-top: 12rpx; }
 
-/* ---------- 24小时逐时预报（横向时间轴） ---------- */
-.hourly-scroll { width: 100%; white-space: nowrap; }
-.hourly-track { display: inline-flex; gap: 16rpx; padding: 8rpx 0; }
-.hourly-card {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  width: 132rpx; padding: 24rpx 8rpx; border-radius: 24rpx; flex-shrink: 0;
-  background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-  border: 1rpx solid rgba(255,255,255,0.07);
-  text-align: center;
-  transition: transform 0.15s ease;
+/* ---------- 24小时逐时预报（纵向表格） ---------- */
+.hourly-scroll { max-height: 960rpx; }
+.hourly-table { display: flex; flex-direction: column; }
+.hourly-row {
+  display: flex; align-items: center; padding: 22rpx 8rpx;
+  border-bottom: 1rpx solid rgba(255,255,255,0.05);
 }
-.hourly-card:active { transform: scale(0.96); }
+.hourly-row:last-child { border-bottom: none; }
+.hourly-header { border-bottom: 1rpx solid rgba(255,255,255,0.12); padding: 16rpx 8rpx; }
+.hourly-header text { color: #9fb3c8; font-size: 20rpx; font-weight: 500; }
 .hourly-now {
-  background: linear-gradient(160deg, rgba(34,211,238,0.22), rgba(14,165,233,0.10));
-  border-color: rgba(34,211,238,0.45);
-  box-shadow: 0 10rpx 30rpx rgba(14,165,233,0.22);
+  background: linear-gradient(90deg, rgba(34,211,238,0.14), rgba(34,211,238,0.04));
+  border-radius: 16rpx; margin: 2rpx 0;
 }
-.hc-time { font-size: 22rpx; color: #9fb3c8; margin-bottom: 10rpx; white-space: nowrap; }
-.hourly-now .hc-time { color: #22d3ee; font-weight: 700; }
-.hc-icon { font-size: 48rpx; line-height: 1; margin-bottom: 8rpx; }
-.hc-temp { font-size: 30rpx; font-weight: 700; color: #fbbf24; margin-bottom: 12rpx; }
-.hc-score { display: inline-block; padding: 4rpx 12rpx; border-radius: 14rpx; font-size: 22rpx; font-weight: 700; white-space: nowrap; }
+.ht-col-time { width: 64rpx; font-size: 24rpx; font-weight: 600; color: #eaf2ff; text-align: center; }
+.ht-col-weather { width: 94rpx; display: flex; flex-direction: column; align-items: center; gap: 4rpx; }
+.ht-weather-icon { font-size: 34rpx; }
+.ht-weather-text { font-size: 20rpx; color: #9fb3c8; }
+.ht-col-temp { width: 72rpx; font-size: 26rpx; font-weight: 700; color: #fbbf24; text-align: center; }
+.ht-col-pressure { width: 92rpx; font-size: 22rpx; color: #eaf2ff; text-align: center; }
+.ht-col-wind { width: 132rpx; font-size: 22rpx; color: #eaf2ff; text-align: center; }
+.ht-col-watertemp { width: 72rpx; font-size: 24rpx; color: #7dd3fc; text-align: center; }
+.ht-col-oxygen { width: 80rpx; font-size: 24rpx; color: #a5b4fc; text-align: center; }
+.ht-col-score {
+  width: 80rpx; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: 16rpx; padding: 8rpx 0; margin-left: 4rpx;
+}
+.ht-score-num { font-size: 30rpx; font-weight: 800; }
+.ht-score-text { font-size: 18rpx; margin-top: 2rpx; }
 
 /* ---------- 实时气象网格 ---------- */
 .weather-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18rpx; }
