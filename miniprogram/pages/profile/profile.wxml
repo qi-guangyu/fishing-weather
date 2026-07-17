@@ -18,23 +18,23 @@
   <!-- 菜单列表 -->
   <view class="menu-list">
     <view class="menu-item" bindtap="switchCity">
-      <view class="mi-icon" style="background:#e0f2fe">🌍</view>
+      <view class="mi-icon">🌍</view>
       <text class="mi-label">切换城市</text>
       <text class="mi-value">{{currentCity}}</text>
       <text class="mi-arrow">›</text>
     </view>
     <view class="menu-item" bindtap="showAbout">
-      <view class="mi-icon" style="background:#fef3c7">ℹ️</view>
+      <view class="mi-icon">ℹ️</view>
       <text class="mi-label">关于钓鱼气象</text>
       <text class="mi-arrow">›</text>
     </view>
     <view class="menu-item" bindtap="clearCache">
-      <view class="mi-icon" style="background:#dbeafe">🗑️</view>
+      <view class="mi-icon warn">🗑️</view>
       <text class="mi-label">清除缓存</text>
       <text class="mi-arrow">›</text>
     </view>
     <view class="menu-item" wx:if="{{isLoggedIn}}" bindtap="handleLogout">
-      <view class="mi-icon" style="background:#fee2e2">🚪</view>
+      <view class="mi-icon danger">🚪</view>
       <text class="mi-label">退出登录</text>
       <text class="mi-arrow">›</text>
     </view>
