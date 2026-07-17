@@ -20,8 +20,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fishing-spot-secret-key-2026';
 // 微信小程序配置（部署到Render时设置环境变量）
 const WECHAT_APPID = process.env.WECHAT_APPID || '';
 const WECHAT_SECRET = process.env.WECHAT_SECRET || '';
-const UPLOAD_DIR = path.join(__dirname, 'data', 'uploads');
-const DB_PATH = path.join(__dirname, 'data', 'fishing.db');
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'data', 'uploads');
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'fishing.db');
 const QWEATHER_KEY = '195df4dbb8574d3dbbf024de1e1230b7';
 const QWEATHER_HOST = 'ma6x8a83gy.re.qweatherapi.com';
 
@@ -150,6 +150,9 @@ function __saveDbNow() {
 // ============ 数据库初始化（异步） ============
 async function initDatabase() {
   SQL = await initSqlJs();
+
+  // 确保数据库文件所在目录存在（支持外部挂载路径）
+  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
   // 尝试加载已有数据库文件
   if (fs.existsSync(DB_PATH)) {
