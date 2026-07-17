@@ -14,6 +14,21 @@
     </view>
   </view>
 
+  <!-- 实时天气 Hero -->
+  <view class="weather-hero animate-in">
+    <view class="wh-left">
+      <view class="wh-label">📡 实时实况</view>
+      <view class="wh-temp-row">
+        <text class="wh-temp">{{weather.temperature}}</text>
+        <text class="wh-temp-unit">°C</text>
+      </view>
+      <view class="wh-desc">{{weather.weather}}</view>
+    </view>
+    <view class="wh-right">
+      <text class="wh-emoji">🎣</text>
+    </view>
+  </view>
+
   <!-- 评分卡片 -->
   <view class="score-card animate-in">
     <view class="score-label">综合鱼口评分</view>
@@ -22,6 +37,7 @@
       <text class="score-unit">分</text>
     </view>
     <view class="score-tag tag-{{scoreTag}}">{{scoreLevel}}</view>
+    <view class="score-bar"><view class="score-bar-fill" style="width:{{score}}%"></view></view>
     <view class="best-time">🎯 今日最佳时段：{{bestTime}}</view>
     <view class="data-source">{{dataSource}}</view>
   </view>
@@ -39,6 +55,7 @@
       <view class="hourly-item {{item.isNow ? 'hourly-active' : ''}}" wx:for="{{hourlyList}}" wx:key="index">
         <view class="hi-col-time">
           <text class="hi-time">{{item.timeLabel}}</text>
+          <text wx:if="{{item.isNow}}" class="hi-now-tag">现在</text>
         </view>
         <view class="hi-col-cond">
           <text class="h-icon">{{item.icon}}</text>
@@ -88,6 +105,7 @@
           <view class="day-temp">
             <text class="dt-high">{{item.temp_max}}°</text>
             <text class="dt-low">{{item.temp_min}}°</text>
+            <view class="dt-bar"></view>
           </view>
           <view class="day-wind">
             <text>{{item.wind_dir_day}}</text>
