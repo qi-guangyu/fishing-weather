@@ -35,6 +35,8 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
 app.use(express.static(path.join(__dirname, '..')));
+// 同源托管 Web 管理后台（访问 /admin 即可打开）
+app.use('/admin', express.static(path.join(__dirname, '..', 'web-admin')));
 
 // ============ sql.js 数据库封装层 ============
 let SQL, sqlDb;
@@ -314,6 +316,22 @@ async function initDatabase() {
   sqlDb.run('CREATE INDEX IF NOT EXISTS idx_catches_spot ON catches(spot_id)');
   sqlDb.run('CREATE INDEX IF NOT EXISTS idx_comments_spot ON comments(spot_id)');
   sqlDb.run('CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status)');
+
+  // 运营公告表（页面管理模块）
+  sqlDb.run(`
+    CREATE TABLE IF NOT EXISTS announcements (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      content TEXT,
+      type TEXT DEFAULT 'announcement' CHECK(type IN ('announcement','banner')),
+      link TEXT,
+      status TEXT DEFAULT 'active' CHECK(status IN ('active','inactive')),
+      sort_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT (datetime('now','localtime')),
+      updated_at DATETIME
+    )
+  `);
+  sqlDb.run('CREATE INDEX IF NOT EXISTS idx_announcements_status ON announcements(status)');
 
   // 迁移：为已有数据库添加 wechat_openid 列
   try {
@@ -1176,6 +1194,51 @@ app.get('/api/admin/users', authRequired, adminRequired, (req, res) => {
   res.json(paginateResponse(stmt, [], page, size));
 });
 
+// ---------- 页面管理 / 运营公告 ----------
+app.get('/api/admin/announcements', authRequired, adminRequired, (req, res) => {
+  const { status } = req.query;
+  let sql = 'SELECT * FROM announcements';
+  const params = [];
+  if (status) { sql += ' WHERE status = ?'; params.push(status); }
+  sql += ' ORDER BY sort_order ASC, created_at DESC';
+  const list = dbWrap.prepare(sql).all(...params);
+  res.json({ data: list });
+});
+
+app.post('/api/admin/announcements', authRequired, adminRequired, (req, res) => {
+  const { title, content, type, link, status, sort_order } = req.body;
+  if (!title) return res.status(400).json({ error: '标题不能为空' });
+  const id = uuidv4();
+  dbWrap.prepare('INSERT INTO announcements (id, title, content, type, link, status, sort_order) VALUES (?,?,?,?,?,?,?)')
+    .run(id, title, content || '', type || 'announcement', link || '', status || 'active', parseInt(sort_order) || 0);
+  addLog(req.user.id, '新增公告', 'announcement', id, `新增运营公告: ${title}`);
+  res.json({ id });
+});
+
+app.put('/api/admin/announcements/:id', authRequired, adminRequired, (req, res) => {
+  const { title, content, type, link, status, sort_order } = req.body;
+  dbWrap.prepare(`UPDATE announcements SET
+    title = COALESCE(?, title), content = COALESCE(?, content), type = COALESCE(?, type),
+    link = COALESCE(?, link), status = COALESCE(?, status),
+    sort_order = COALESCE(?, sort_order), updated_at = datetime('now','localtime') WHERE id = ?`)
+    .run(title || null, content || null, type || null, link || null, status || null,
+      sort_order != null ? parseInt(sort_order) : null, req.params.id);
+  addLog(req.user.id, '编辑公告', 'announcement', req.params.id, '编辑运营公告');
+  res.json({ success: true });
+});
+
+app.delete('/api/admin/announcements/:id', authRequired, adminRequired, (req, res) => {
+  dbWrap.prepare('DELETE FROM announcements WHERE id = ?').run(req.params.id);
+  addLog(req.user.id, '删除公告', 'announcement', req.params.id, '删除运营公告');
+  res.json({ success: true });
+});
+
+// 公开接口（小程序首页读取运营公告）
+app.get('/api/announcements', (req, res) => {
+  const list = dbWrap.prepare("SELECT id, title, content, type, link, sort_order FROM announcements WHERE status = 'active' ORDER BY sort_order ASC, created_at DESC").all();
+  res.json({ data: list });
+});
+
 app.put('/api/admin/users/:id', authRequired, superAdminRequired, (req, res) => {
   const { role, status } = req.body;
   dbWrap.prepare('UPDATE users SET role = COALESCE(?, role), status = COALESCE(?, status) WHERE id = ?')
@@ -1199,7 +1262,7 @@ initDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`钓鱼天气后端服务已启动: http://localhost:${PORT}`);
     console.log(`API 基础路径: http://localhost:${PORT}/api/`);
-    console.log(`管理后台: http://localhost:${PORT}/admin.html`);
+    console.log(`管理后台: http://localhost:${PORT}/admin/`);
     console.log(`前端钓点页: http://localhost:${PORT}/fishing-spots.html`);
   });
 }).catch(err => {
