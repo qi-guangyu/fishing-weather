@@ -21,24 +21,22 @@
 1. 打开 `miniprogram/project.config.json`
 2. 将 `"appid": "请替换为你的AppID"` 改为你的真实 AppID
 3. 打开 `miniprogram/app.js`
-4. 将 `apiBase` 改为你的后端地址（部署后获取）
+4. 本地开发时 `apiBase` 使用 `http://localhost:3456`；上线前改为你的 HTTPS 后端地址
 
 ---
 
 ## 二、配置服务器域名
 
-小程序要求所有网络请求必须走HTTPS，且域名要在后台白名单里。
+小程序要求所有网络请求必须走 HTTPS，且域名要在后台白名单里。天气接口已改为后端代理，只需配置你的后端域名。
 
-### 1. 和风天气API域名
-在「开发设置」→「服务器域名」中添加：
+### 1. 后端域名
+在「开发设置」→「服务器域名」→「request 合法域名」中添加你的后端 HTTPS 地址：
 
 | 类型 | 域名 |
 |---|---|
-| request合法域名 | `https://ma6x8a83gy.re.qweatherapi.com` |
-| request合法域名 | `https://你的后端地址.onrender.com` |
+| request合法域名 | `https://你的后端地址` |
 
-### 2. 如果后端也部署了
-同样添加到 request 合法域名列表中。
+> 本地开发时可在开发者工具「详情」→「本地设置」中勾选「不校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书」，这样 `http://localhost:3456` 也能调试。
 
 ---
 

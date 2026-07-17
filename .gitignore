@@ -41,3 +41,10 @@ Thumbs.db
 
 # WorkBuddy project data
 .workbuddy/
+
+# WeChat DevTools private config
+miniprogram/project.private.config.json
+
+# Large icon assets (use only the resized icon-144 in package)
+miniprogram/assets/icons/
+miniprogram/assets/icon-1024.png

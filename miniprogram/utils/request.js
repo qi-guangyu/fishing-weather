@@ -37,19 +37,18 @@ function request(options) {
 }
 
 /**
- * 和风天气API请求
+ * 和风天气API请求（走后端代理，避免小程序暴露和风 key）
  */
 function qweatherRequest(path, params) {
   return new Promise((resolve, reject) => {
     const app = getApp()
-    const baseUrl = 'https://' + app.globalData.qweatherHost
-    let url = baseUrl + path
-    const query = { ...params, key: app.globalData.qweatherKey }
-    const queryString = Object.keys(query).map(k => k + '=' + query[k]).join('&')
-    url += '?' + queryString
+    // path 形如 /v7/weather/now -> 提取 type: now|24h|7d
+    const type = path.split('/').pop()
+    const url = app.globalData.apiBase + '/api/weather/' + type
     wx.request({
       url: url,
       method: 'GET',
+      data: params || {},
       success(res) {
         if (res.statusCode === 200 && res.data) {
           resolve(res.data)

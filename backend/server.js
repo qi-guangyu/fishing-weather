@@ -12,6 +12,7 @@ const { v4: uuidv4 } = require('uuid');
 const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
+const zlib = require('zlib');
 
 // ============ 配置 ============
 const PORT = process.env.PORT || 3456;
@@ -444,11 +445,14 @@ async function fetchWeatherForSpot(lat, lon) {
     const url = `https://${QWEATHER_HOST}/v7/weather/now?location=${lon.toFixed(2)},${lat.toFixed(2)}&key=${QWEATHER_KEY}`;
     return new Promise((resolve) => {
       https.get(url, { rejectUnauthorized: false }, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
+        const chunks = [];
+        res.on('data', chunk => chunks.push(chunk));
         res.on('end', () => {
           try {
-            const json = JSON.parse(data);
+            const buffer = Buffer.concat(chunks);
+            const isGzip = res.headers['content-encoding'] === 'gzip';
+            const raw = isGzip ? zlib.gunzipSync(buffer) : buffer;
+            const json = JSON.parse(raw.toString());
             if (json.code === '200' && json.now) {
               const n = json.now;
               const pressure = parseInt(n.pressure);
@@ -490,6 +494,35 @@ async function updateSpotWeather(spotId) {
     dbWrap.prepare('UPDATE fishing_spots SET weather_data = ?, fishing_index = ?, updated_at = datetime("now","localtime") WHERE id = ?')
       .run(JSON.stringify(weather), weather.fishing_index, spotId);
   }
+}
+
+// 通用和风天气代理（小程序不再直接暴露 key）
+async function proxyQweather(type, location) {
+  const typeMap = {
+    'now': '/v7/weather/now',
+    '24h': '/v7/weather/24h',
+    '7d': '/v7/weather/7d'
+  };
+  const path = typeMap[type];
+  if (!path) return null;
+  try {
+    const https = require('https');
+    const url = `https://${QWEATHER_HOST}${path}?location=${encodeURIComponent(location)}&key=${QWEATHER_KEY}`;
+    return new Promise((resolve) => {
+      https.get(url, { rejectUnauthorized: false }, (res) => {
+        const chunks = [];
+        res.on('data', chunk => chunks.push(chunk));
+        res.on('end', () => {
+          try {
+            const buffer = Buffer.concat(chunks);
+            const isGzip = res.headers['content-encoding'] === 'gzip';
+            const raw = isGzip ? zlib.gunzipSync(buffer) : buffer;
+            resolve(JSON.parse(raw.toString()));
+          } catch (e) { resolve(null); }
+        });
+      }).on('error', () => resolve(null));
+    });
+  } catch (e) { return null; }
 }
 
 // ============ 默认地区初始化 ============
@@ -1237,6 +1270,16 @@ app.delete('/api/admin/announcements/:id', authRequired, adminRequired, (req, re
 app.get('/api/announcements', (req, res) => {
   const list = dbWrap.prepare("SELECT id, title, content, type, link, sort_order FROM announcements WHERE status = 'active' ORDER BY sort_order ASC, created_at DESC").all();
   res.json({ data: list });
+});
+
+// 和风天气代理接口（小程序不再直接请求和风域名，避免暴露 key）
+app.get('/api/weather/:type', async (req, res) => {
+  const { type } = req.params;
+  const { location } = req.query;
+  if (!location) return res.status(400).json({ error: '缺少 location 参数' });
+  const data = await proxyQweather(type, location);
+  if (!data) return res.status(502).json({ error: '天气服务暂不可用' });
+  res.json(data);
 });
 
 app.put('/api/admin/users/:id', authRequired, superAdminRequired, (req, res) => {

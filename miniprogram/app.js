@@ -1,10 +1,7 @@
 App({
   globalData: {
-    // 后端API地址 - 部署后替换为你的Render地址
-    apiBase: 'https://your-render-app.onrender.com',
-    // 和风天气API配置
-    qweatherKey: '195df4dbb8574d3dbbf024de1e1230b7',
-    qweatherHost: 'ma6x8a83gy.re.qweatherapi.com',
+    // 后端API地址：本地开发时指向 localhost，生产部署后替换为 HTTPS 域名
+    apiBase: 'http://localhost:3456',
     // 用户信息
     userInfo: null,
     token: null,
