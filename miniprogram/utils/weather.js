@@ -209,22 +209,22 @@ function getScoreLevel(score) {
 // ==================== 鱼种数据 ====================
 const FISH_SPECIES_DATA = {
   taiwan: [
-    { key: 'jiyu', name: '鲫鱼', icon: '🐟', temp: [15, 25] },
-    { key: 'liyu', name: '鲤鱼', icon: '🐠', temp: [18, 28] },
-    { key: 'caoyu', name: '草鱼', icon: '🐡', temp: [20, 30] },
-    { key: 'qingyu', name: '青鱼', icon: '🦈', temp: [18, 28] }
+    { key: 'jiyu', name: '鲫鱼', icon: '/assets/fish-icons/jiyu.png', temp: [15, 25] },
+    { key: 'liyu', name: '鲤鱼', icon: '/assets/fish-icons/liyu.png', temp: [18, 28] },
+    { key: 'caoyu', name: '草鱼', icon: '/assets/fish-icons/caoyu.png', temp: [20, 30] },
+    { key: 'qingyu', name: '青鱼', icon: '/assets/fish-icons/qingyu.png', temp: [18, 28] }
   ],
   lure: [
-    { key: 'qiaozui', name: '翘嘴', icon: '🐟', temp: [18, 28] },
-    { key: 'luyu', name: '鲈鱼', icon: '🐠', temp: [16, 26] },
-    { key: 'guiyu', name: '鳜鱼', icon: '🐡', temp: [15, 25] },
-    { key: 'heiyu', name: '黑鱼', icon: '🦈', temp: [20, 30] }
+    { key: 'qiaozui', name: '翘嘴', icon: '/assets/fish-icons/qiaozui.png', temp: [18, 28] },
+    { key: 'luyu', name: '鲈鱼', icon: '/assets/fish-icons/luyu.png', temp: [16, 26] },
+    { key: 'guiyu', name: '鳜鱼', icon: '/assets/fish-icons/guiyu.png', temp: [15, 25] },
+    { key: 'heiyu', name: '黑鱼', icon: '/assets/fish-icons/heiyu.png', temp: [20, 30] }
   ],
   sea: [
-    { key: 'daiyu', name: '带鱼', icon: '🐟', temp: [18, 26] },
-    { key: 'diaoyu', name: '鲷鱼', icon: '🐠', temp: [16, 26] },
-    { key: 'luyu2', name: '海鲈', icon: '🐡', temp: [15, 25] },
-    { key: 'bayu', name: '鲅鱼', icon: '🦈', temp: [16, 24] }
+    { key: 'daiyu', name: '带鱼', icon: '/assets/fish-icons/daiyu.png', temp: [18, 26] },
+    { key: 'diaoyu', name: '鲷鱼', icon: '/assets/fish-icons/diaoyu.png', temp: [16, 26] },
+    { key: 'luyu2', name: '海鲈', icon: '/assets/fish-icons/luyu2.png', temp: [15, 25] },
+    { key: 'bayu', name: '鲅鱼', icon: '/assets/fish-icons/bayu.png', temp: [16, 24] }
   ]
 }
 
