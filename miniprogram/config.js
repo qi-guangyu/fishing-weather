@@ -3,5 +3,5 @@
 // 例如：https://xxxxxx.ap-shanghai.run.tcloudbase.com
 // 拿到云托管「公网访问地址」后，只改这一行，然后重新上传小程序代码即可。
 module.exports = {
-  API_BASE: 'https://YOUR_CLOUD_RUN_DOMAIN'
+  API_BASE: 'https://express-498e-28i241-9-1453163295.sh.run.tcloudbase.com'
 };
