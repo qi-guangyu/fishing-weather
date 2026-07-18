@@ -32,7 +32,7 @@ fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true });
 // ============ Express 初始化 ============
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '50mb', type: ['application/json', 'application/*+json'], charset: 'utf-8' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
 app.use(express.static(path.join(__dirname, '..')));
