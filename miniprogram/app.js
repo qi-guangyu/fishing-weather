@@ -1,7 +1,9 @@
+const { API_BASE } = require('./config.js');
+
 App({
   globalData: {
-    // 后端API地址：本地开发时指向 localhost，生产部署后替换为 HTTPS 域名
-    apiBase: 'http://localhost:3456',
+    // 后端API地址：见 miniprogram/config.js（部署后改为云托管 HTTPS 域名）
+    apiBase: API_BASE,
     // 用户信息
     userInfo: null,
     token: null,

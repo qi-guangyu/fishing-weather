@@ -13,6 +13,7 @@ const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
 const zlib = require('zlib');
+const { seedDemoSpots } = require('./seed');
 
 // ============ 配置 ============
 const PORT = process.env.PORT || 3456;
@@ -35,8 +36,8 @@ app.use(cors());
 app.use(express.json({ limit: '50mb', type: ['application/json', 'application/*+json'], charset: 'utf-8' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
-app.use(express.static(path.join(__dirname, '..')));
 // 同源托管 Web 管理后台（访问 /admin 即可打开）
+// 注意：不再挂载项目根目录为静态资源（避免容器文件系统通过 HTTP 暴露）
 app.use('/admin', express.static(path.join(__dirname, '..', 'web-admin')));
 
 // ============ sql.js 数据库封装层 ============
@@ -358,6 +359,13 @@ async function initDatabase() {
   const regionCount = dbWrap.prepare('SELECT COUNT(*) as cnt FROM regions').get();
   if (regionCount && regionCount.cnt === 0) {
     initDefaultRegions();
+  }
+
+  // 初始化演示钓点（库为空时自动 seed，保证线上钓点列表非空）
+  try {
+    seedDemoSpots(dbWrap);
+  } catch (e) {
+    console.error('[DB] seed 演示钓点失败:', e.message);
   }
 }
 
@@ -1352,8 +1360,7 @@ initDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`钓鱼天气后端服务已启动: http://localhost:${PORT}`);
     console.log(`API 基础路径: http://localhost:${PORT}/api/`);
-    console.log(`管理后台: http://localhost:${PORT}/admin/`);
-    console.log(`前端钓点页: http://localhost:${PORT}/fishing-spots.html`);
+    console.log(`管理后台: http://localhost:${PORT}/admin/  (需将 web-admin 挂载进容器，详见 DEPLOY.md)`);
   });
 }).catch(err => {
   console.error('[DB] 数据库初始化失败:', err);
