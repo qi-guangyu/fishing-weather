@@ -70,20 +70,41 @@ function logout() {
 }
 
 /**
- * 获取用户信息（需要用户点击按钮授权）
+ * 更新用户资料（昵称 / 头像）
+ * 头像为微信 chooseAvatar 返回的本地临时文件路径，需上传到后端持久化。
+ * 兼容：仅昵称（JSON PUT）/ 含头像（multipart 上传）。
  */
-function getUserProfile() {
+function updateProfile({ nickname, avatarPath } = {}) {
+  const token = wx.getStorageSync('token')
+  const header = token ? { Authorization: 'Bearer ' + token } : {}
   return new Promise((resolve, reject) => {
-    wx.getUserProfile({
-      desc: '用于完善用户资料',
-      success(res) {
-        resolve(res.userInfo)
-      },
-      fail(err) {
-        reject(err)
-      }
-    })
+    if (avatarPath) {
+      wx.uploadFile({
+        url: getApp().globalData.apiBase + '/api/auth/profile',
+        filePath: avatarPath,
+        name: 'avatar',
+        header,
+        formData: nickname ? { nickname } : {},
+        success(res) {
+          try {
+            const data = JSON.parse(res.data)
+            resolve(data.user || null)
+          } catch (e) {
+            resolve(null)
+          }
+        },
+        fail: reject
+      })
+    } else if (nickname) {
+      request({
+        url: '/api/auth/profile',
+        method: 'PUT',
+        data: { nickname }
+      }).then(d => resolve(d.user || null)).catch(reject)
+    } else {
+      resolve(null)
+    }
   })
 }
 
-module.exports = { wechatLogin, isLoggedIn, logout, getUserProfile }
+module.exports = { wechatLogin, isLoggedIn, logout, updateProfile }

@@ -1,34 +1,71 @@
-const { wechatLogin, getUserProfile } = require('../../utils/auth')
+const { wechatLogin, updateProfile } = require('../../utils/auth')
 const app = getApp()
 
 Page({
   data: {
-    loading: false
+    loading: false,
+    avatarUrl: '',
+    nickname: '',
+    showPrivacy: false
   },
 
-  // 微信授权登录
+  onLoad() {
+    // 首次进入且未同意隐私协议时弹出授权
+    if (!wx.getStorageSync('privacyConsent')) {
+      this.setData({ showPrivacy: true })
+    }
+  },
+
+  // 微信头像选择（chooseAvatar 返回本地临时文件路径）
+  onChooseAvatar(e) {
+    this.setData({ avatarUrl: e.detail.avatarUrl })
+  },
+
+  // 昵称输入
+  onNickInput(e) {
+    this.setData({ nickname: e.detail.value || e.detail.nickName || '' })
+  },
+
+  // ---------- 隐私授权 ----------
+  openPrivacy() {
+    wx.navigateTo({ url: '/pages/privacy/privacy' })
+  },
+  agreePrivacy() {
+    wx.setStorageSync('privacyConsent', true)
+    this.setData({ showPrivacy: false })
+  },
+  rejectPrivacy() {
+    this.setData({ showPrivacy: false })
+    wx.showToast({ title: '需同意隐私协议后登录', icon: 'none' })
+  },
+
+  // ---------- 微信登录 ----------
   async handleWechatLogin() {
     if (this.data.loading) return
+    // 未同意隐私协议则先弹窗
+    if (!wx.getStorageSync('privacyConsent')) {
+      this.setData({ showPrivacy: true })
+      return
+    }
     this.setData({ loading: true })
-
     try {
-      // 1. 获取用户资料（需要用户点击）
-      let userInfo = {}
-      try {
-        userInfo = await getUserProfile()
-      } catch (e) {
-        console.log('用户拒绝授权资料，使用默认头像')
-      }
-
-      // 2. 微信登录
+      // 1. 静默登录（wx.login → 后端换 openid），不再调用已废弃的 getUserProfile
       await wechatLogin()
 
-      // 3. 如果有用户资料，更新到全局
-      if (userInfo.nickName) {
-        const stored = wx.getStorageSync('userInfo') || {}
-        const merged = { ...stored, username: userInfo.nickName, avatar: userInfo.avatarUrl }
-        wx.setStorageSync('userInfo', merged)
-        app.globalData.userInfo = merged
+      // 2. 若用户填写了昵称/头像，补提交到后端
+      const { nickname, avatarUrl } = this.data
+      if (nickname || avatarUrl) {
+        const updated = await updateProfile({ nickname, avatarPath: avatarUrl })
+        if (updated) {
+          const stored = wx.getStorageSync('userInfo') || {}
+          const merged = {
+            ...stored,
+            nickname: updated.nickname || stored.nickname,
+            avatar: updated.avatar || stored.avatar
+          }
+          wx.setStorageSync('userInfo', merged)
+          app.globalData.userInfo = merged
+        }
       }
 
       wx.showToast({ title: '登录成功', icon: 'success' })
@@ -37,7 +74,7 @@ Page({
       }, 1000)
     } catch (e) {
       console.error('[login] 登录失败:', e)
-      wx.showToast({ title: e.message || '登录失败', icon: 'none' })
+      wx.showToast({ title: (e && e.message) || '登录失败', icon: 'none' })
     }
     this.setData({ loading: false })
   },

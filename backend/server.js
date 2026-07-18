@@ -619,6 +619,36 @@ app.post('/api/auth/wechat-login', async (req, res) => {
   }
 });
 
+// ---------- 更新用户资料（昵称 / 头像） ----------
+// 兼容两种提交方式：
+//  1) 仅昵称：application/json  PUT { nickname }
+//  2) 含头像：multipart/form-data（wx.uploadFile），file 字段名 avatar，formData 可带 nickname
+app.put('/api/auth/profile', authRequired, upload.single('avatar'), (req, res) => {
+  try {
+    const userId = req.user.id;
+    const sets = [];
+    const values = [];
+    if (req.body && req.body.nickname) {
+      sets.push('nickname = ?');
+      values.push(String(req.body.nickname).slice(0, 32));
+    }
+    if (req.file) {
+      sets.push('avatar = ?');
+      values.push('/uploads/' + req.file.filename);
+    }
+    if (sets.length === 0) {
+      return res.json({ user: req.user });
+    }
+    sets.push("updated_at = datetime('now','localtime')");
+    values.push(userId);
+    dbWrap.prepare('UPDATE users SET ' + sets.join(', ') + ' WHERE id = ?').run(...values);
+    const user = dbWrap.prepare('SELECT id, username, nickname, avatar, role FROM users WHERE id = ?').get(userId);
+    res.json({ user });
+  } catch (e) {
+    res.status(500).json({ error: '更新资料失败: ' + e.message });
+  }
+});
+
 // ---------- 地区接口 ----------
 app.get('/api/regions', (req, res) => {
   const { parent_id } = req.query;

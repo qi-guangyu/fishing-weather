@@ -1,0 +1,37 @@
+<view class="privacy-page">
+  <view class="p-header">
+    <view class="p-title">隐私政策</view>
+    <view class="p-sub">钓鱼气象小程序</view>
+  </view>
+
+  <view class="p-body">
+    <view class="p-section">
+      <view class="p-h">一、我们收集的信息</view>
+      <view class="p-p">· 账号信息：你授权登录后，我们获取微信openid用于生成账号，你填写的昵称与头像将作为展示资料。</view>
+      <view class="p-p">· 位置信息：用于为你推荐附近钓点与本地气象、鱼情预报。你可在系统中随时关闭定位权限。</view>
+      <view class="p-p">· 发布内容：你发布的钓点、渔获、评论及照片，用于在小程序内展示与社区互动。</view>
+    </view>
+
+    <view class="p-section">
+      <view class="p-h">二、信息的使用</view>
+      <view class="p-p">我们仅在为你提供气象查询、钓点推荐、内容发布与账号同步等服务时使用上述信息，不会用于与功能无关的商业目的。</view>
+    </view>
+
+    <view class="p-section">
+      <view class="p-h">三、信息的保护</view>
+      <view class="p-p">我们采用加密传输与访问控制等措施保护你的个人信息，未经你的同意不向第三方披露，法律法规另有规定的除外。</view>
+    </view>
+
+    <view class="p-section">
+      <view class="p-h">四、你的权利</view>
+      <view class="p-p">你可随时在「我的」页退出登录、清除本地缓存。如需删除账号及关联数据，可联系客服处理。</view>
+    </view>
+
+    <view class="p-section">
+      <view class="p-h">五、第三方服务</view>
+      <view class="p-p">气象数据由第三方天气服务商提供，位置与登录相关能力由微信平台提供支持，相关数据处理遵循其各自隐私政策。</view>
+    </view>
+
+    <view class="p-tip">本政策为简版说明，最终以小程序实际运营配置为准。</view>
+  </view>
+</view>

@@ -8,7 +8,8 @@
     "pages/profile/profile",
     "pages/my-list/my-list",
     "pages/catch-publish/catch-publish",
-    "pages/spot-submit/spot-submit"
+    "pages/spot-submit/spot-submit",
+    "pages/privacy/privacy"
   ],
   "window": {
     "navigationBarBackgroundColor": "#0f172a",
