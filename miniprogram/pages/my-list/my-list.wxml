@@ -1,0 +1,60 @@
+<view class="list-page">
+  <!-- 钓点类：我的收藏 / 我的投稿 -->
+  <block wx:if="{{type === 'favorites' || type === 'submissions'}}">
+    <view class="spot-card card" wx:for="{{list}}" wx:key="id"
+          bindtap="goSpot" data-id="{{item.spotId || item.id}}" data-status="{{item.statusText}}">
+      <image wx:if="{{item.cover}}" class="sc-cover" src="{{item.cover}}" mode="aspectFill" />
+      <view wx:else class="sc-cover sc-cover-ph">📍</view>
+      <view class="sc-body">
+        <view class="sc-title">{{item.name}}</view>
+        <view class="sc-addr" wx:if="{{item.addr}}">{{item.addr}}</view>
+        <view class="sc-tags">
+          <text wx:for="{{item.tags}}" wx:for-item="t" wx:key="*this" class="tag-pill">{{t}}</text>
+          <text wx:if="{{type === 'favorites' && item.indexLevel}}" class="tag-pill {{item.indexClass}}">{{item.indexLevel}}</text>
+          <text wx:if="{{type === 'submissions' && item.statusText}}" class="tag-pill {{item.statusClass}}">{{item.statusText}}</text>
+        </view>
+        <view class="sc-date">{{item.date}}</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 我的渔获 -->
+  <block wx:elif="{{type === 'catches'}}">
+    <view class="item-card card" wx:for="{{list}}" wx:key="id">
+      <image wx:if="{{item.img}}" class="ic-img" src="{{item.img}}" mode="aspectFill" />
+      <view wx:else class="ic-img ic-img-ph">🐟</view>
+      <view class="ic-body">
+        <view class="ic-top">
+          <text class="ic-spot">📍 {{item.spot}}</text>
+          <text class="ic-weight" wx:if="{{item.weight}}">{{item.weight}} kg</text>
+        </view>
+        <view class="ic-feeling" wx:if="{{item.feeling}}">{{item.feeling}}</view>
+        <view class="ic-date">{{item.date}}</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 我的评论 -->
+  <block wx:else>
+    <view class="item-card card" wx:for="{{list}}" wx:key="id">
+      <image wx:if="{{item.img}}" class="ic-img" src="{{item.img}}" mode="aspectFill" />
+      <view wx:else class="ic-img ic-img-ph">💬</view>
+      <view class="ic-body">
+        <view class="ic-top">
+          <text class="ic-spot">📍 {{item.spot}}</text>
+        </view>
+        <view class="ic-feeling">{{item.content}}</view>
+        <view class="ic-date">{{item.date}}</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 空态 -->
+  <view wx:if="{{!loading && list.length === 0}}" class="empty">
+    <view class="empty-icon">🗂️</view>
+    <view class="empty-text">{{cfg.empty}}</view>
+  </view>
+  <!-- 加载更多 -->
+  <view wx:if="{{loading}}" class="loadmore">加载中…</view>
+  <view wx:if="{{!loading && noMore && list.length > 0}}" class="loadmore">已经到底啦</view>
+</view>

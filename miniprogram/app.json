@@ -5,7 +5,8 @@
     "pages/spots/spots",
     "pages/spot-detail/spot-detail",
     "pages/login/login",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/my-list/my-list"
   ],
   "window": {
     "navigationBarBackgroundColor": "#0f172a",

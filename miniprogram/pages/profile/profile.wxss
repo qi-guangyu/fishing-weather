@@ -66,6 +66,7 @@
   background: rgba(34,211,238,0.14);
 }
 .mi-icon.warn { background: rgba(245,158,11,0.16); }
+.mi-icon.gold { background: rgba(245,200,66,0.18); }
 .mi-icon.danger { background: rgba(251,113,133,0.16); }
 .mi-label { flex: 1; font-size: 30rpx; color: #eaf2ff; }
 .mi-value { font-size: 26rpx; color: #9fb3c8; }

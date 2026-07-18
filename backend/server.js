@@ -846,32 +846,37 @@ app.post('/api/reports', authRequired, (req, res) => {
 
 // ---------- 用户投稿 ----------
 app.post('/api/spots/submit', authRequired, upload.array('images', 10), async (req, res) => {
-  const {
-    name, province_id, city_id, district_id, province, city, district,
-    address, latitude, longitude, water_type, target_fish, avg_depth,
-    best_time, best_season, fee_type, fee_price, parking, restroom, shade,
-    rod_limit, flood_warning, description
-  } = req.body;
+  try {
+    const {
+      name, province_id, city_id, district_id, province, city, district,
+      address, latitude, longitude, water_type, target_fish, avg_depth,
+      best_time, best_season, fee_type, fee_price, parking, restroom, shade,
+      rod_limit, flood_warning, description
+    } = req.body;
 
-  if (!name || !latitude || !longitude) return res.status(400).json({ error: '钓点名称、经纬度为必填项' });
+    if (!name || !latitude || !longitude) return res.status(400).json({ error: '钓点名称、经纬度为必填项' });
 
-  const images = req.files ? JSON.stringify(req.files.map(f => '/uploads/' + f.filename)) : '[]';
-  const id = uuidv4();
+    const images = req.files ? JSON.stringify(req.files.map(f => '/uploads/' + f.filename)) : '[]';
+    const id = uuidv4();
 
-  dbWrap.prepare(`INSERT INTO fishing_spots (id, name, province_id, city_id, district_id, province, city, district,
-    address, latitude, longitude, water_type, target_fish, avg_depth, best_time, best_season,
-    fee_type, fee_price, parking, restroom, shade, rod_limit, flood_warning, description, images, status, submitter_id)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,"pending",?)`)
-    .run(id, name, parseInt(province_id) || null, parseInt(city_id) || null, parseInt(district_id) || null,
-      province || null, city || null, district || null, address || null,
-      parseFloat(latitude), parseFloat(longitude),
-      water_type || null, target_fish || null, parseFloat(avg_depth) || null, best_time || null, best_season || null,
-      fee_type || null, fee_price || null, parseInt(parking) || 0, parseInt(restroom) || 0, parseInt(shade) || 0,
-      rod_limit || null, flood_warning || null, filterSensitive(description || ''), images, req.user.id);
+    dbWrap.prepare(`INSERT INTO fishing_spots (id, name, province_id, city_id, district_id, province, city, district,
+      address, latitude, longitude, water_type, target_fish, avg_depth, best_time, best_season,
+      fee_type, fee_price, parking, restroom, shade, rod_limit, flood_warning, description, images, status, submitter_id)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,"pending",?)`)
+      .run(id, name, parseInt(province_id) || null, parseInt(city_id) || null, parseInt(district_id) || null,
+        province || null, city || null, district || null, address || null,
+        parseFloat(latitude), parseFloat(longitude),
+        water_type || null, target_fish || null, parseFloat(avg_depth) || null, best_time || null, best_season || null,
+        fee_type || null, fee_price || null, parseInt(parking) || 0, parseInt(restroom) || 0, parseInt(shade) || 0,
+        rod_limit || null, flood_warning || null, filterSensitive(description || ''), images, req.user.id);
 
-  updateSpotWeather(id).catch(() => {});
-  addLog(req.user.id, '用户投稿', 'spot', id, `投稿钓点: ${name}`);
-  res.json({ id, message: '投稿已提交，管理员审核通过后将展示' });
+    updateSpotWeather(id).catch(() => {});
+    addLog(req.user.id, '用户投稿', 'spot', id, `投稿钓点: ${name}`);
+    res.json({ id, message: '投稿已提交，管理员审核通过后将展示' });
+  } catch (e) {
+    console.error('submit error:', e);
+    res.status(500).json({ error: '投稿失败：' + e.message });
+  }
 });
 
 // ---------- 个人中心 ----------
@@ -885,6 +890,15 @@ app.get('/api/user/comments', authRequired, (req, res) => {
   const { page, size } = req.query;
   const stmt = `SELECT c.*, s.name as spot_name FROM comments c JOIN fishing_spots s ON c.spot_id = s.id WHERE c.user_id = ? ORDER BY c.created_at DESC`;
   res.json(paginateResponse(stmt, [req.user.id], page, size));
+});
+
+// 我的投稿
+app.get('/api/user/submissions', authRequired, (req, res) => {
+  const { page, size } = req.query;
+  const stmt = `SELECT * FROM fishing_spots WHERE submitter_id = ? ORDER BY created_at DESC`;
+  const result = paginateResponse(stmt, [req.user.id], page, size);
+  result.data = result.data.map(r => ({ ...r, images: safeJSON(r.images) }));
+  res.json(result);
 });
 
 // ======================================================================

@@ -1,0 +1,69 @@
+/* 我的列表（我的渔获/收藏/投稿/评论）· 青蓝水主题 */
+.list-page {
+  min-height: 100vh;
+  padding: 24rpx 28rpx 140rpx;
+  background:
+    radial-gradient(110% 40% at 50% -10%, rgba(34,211,238,0.08), transparent 60%),
+    linear-gradient(168deg, #0a1322 0%, #0b1626 46%, #070b14 100%);
+}
+
+/* ---------- 钓点类卡片（收藏/投稿） ---------- */
+.spot-card {
+  display: flex; align-items: stretch; padding: 20rpx; margin-bottom: 24rpx;
+}
+.sc-cover {
+  width: 160rpx; height: 160rpx; border-radius: 20rpx; flex-shrink: 0;
+  background: rgba(255,255,255,0.05);
+}
+.sc-cover-ph {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 64rpx; background: rgba(34,211,238,0.10);
+}
+.sc-body { flex: 1; margin-left: 22rpx; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.sc-title { font-size: 32rpx; font-weight: 700; color: #eaf2ff; }
+.sc-addr { font-size: 24rpx; color: #9fb3c8; margin-top: 6rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-tags { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 14rpx; }
+.sc-date { font-size: 22rpx; color: rgba(159,179,200,0.6); margin-top: 12rpx; }
+
+/* ---------- 通用小卡（渔获/评论） ---------- */
+.item-card {
+  display: flex; align-items: stretch; padding: 20rpx; margin-bottom: 24rpx;
+}
+.ic-img {
+  width: 140rpx; height: 140rpx; border-radius: 18rpx; flex-shrink: 0;
+  background: rgba(255,255,255,0.05);
+}
+.ic-img-ph {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56rpx; background: rgba(34,211,238,0.10);
+}
+.ic-body { flex: 1; margin-left: 22rpx; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.ic-top { display: flex; align-items: center; justify-content: space-between; }
+.ic-spot { font-size: 28rpx; color: #cfe3f5; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ic-weight {
+  font-size: 28rpx; font-weight: 700; color: #f5c842; flex-shrink: 0; margin-left: 16rpx;
+}
+.ic-feeling {
+  font-size: 26rpx; color: #b8c8da; margin-top: 10rpx; line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ic-date { font-size: 22rpx; color: rgba(159,179,200,0.6); margin-top: 12rpx; }
+
+/* ---------- 标签 / 评分色 ---------- */
+.tag-pill {
+  font-size: 22rpx; padding: 6rpx 16rpx; border-radius: 999rpx;
+  background: rgba(34,211,238,0.14); color: #bdeef7; border: 1rpx solid rgba(34,211,238,0.25);
+}
+.level-good { background: rgba(52,211,153,0.16); color: #6ee7b7; border-color: rgba(52,211,153,0.35); }
+.level-ok { background: rgba(125,211,252,0.16); color: #bae6fd; border-color: rgba(125,211,252,0.35); }
+.level-mid { background: rgba(252,211,77,0.16); color: #fde68a; border-color: rgba(252,211,77,0.35); }
+.level-bad { background: rgba(253,164,175,0.16); color: #fecdd3; border-color: rgba(253,164,175,0.35); }
+.status-pending { background: rgba(252,211,77,0.16); color: #fde68a; border-color: rgba(252,211,77,0.35); }
+.status-published { background: rgba(52,211,153,0.16); color: #6ee7b7; border-color: rgba(52,211,153,0.35); }
+.status-rejected { background: rgba(253,164,175,0.16); color: #fecdd3; border-color: rgba(253,164,175,0.35); }
+
+/* ---------- 空态 / 加载 ---------- */
+.empty { text-align: center; padding: 160rpx 40rpx; }
+.empty-icon { font-size: 96rpx; opacity: 0.5; }
+.empty-text { font-size: 28rpx; color: rgba(159,179,200,0.7); margin-top: 24rpx; line-height: 1.6; }
+.loadmore { text-align: center; font-size: 24rpx; color: rgba(159,179,200,0.55); padding: 28rpx 0; }

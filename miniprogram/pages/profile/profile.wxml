@@ -23,6 +23,33 @@
       <text class="mi-value">{{currentCity}}</text>
       <text class="mi-arrow">›</text>
     </view>
+
+    <!-- 用户中心入口 -->
+    <view class="menu-item" bindtap="goList" data-type="catches">
+      <view class="mi-icon">🎣</view>
+      <text class="mi-label">我的渔获</text>
+      <text class="mi-value" wx:if="{{stats.catches > 0}}">{{stats.catches}}</text>
+      <text class="mi-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goList" data-type="favorites">
+      <view class="mi-icon gold">⭐</view>
+      <text class="mi-label">我的收藏</text>
+      <text class="mi-value" wx:if="{{stats.favorites > 0}}">{{stats.favorites}}</text>
+      <text class="mi-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goList" data-type="submissions">
+      <view class="mi-icon">📝</view>
+      <text class="mi-label">我的投稿</text>
+      <text class="mi-value" wx:if="{{stats.submissions > 0}}">{{stats.submissions}}</text>
+      <text class="mi-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goList" data-type="comments">
+      <view class="mi-icon">💬</view>
+      <text class="mi-label">我的评论</text>
+      <text class="mi-value" wx:if="{{stats.comments > 0}}">{{stats.comments}}</text>
+      <text class="mi-arrow">›</text>
+    </view>
+
     <view class="menu-item" bindtap="showAbout">
       <view class="mi-icon">ℹ️</view>
       <text class="mi-label">关于钓鱼气象</text>
