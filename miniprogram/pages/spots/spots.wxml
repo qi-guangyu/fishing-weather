@@ -88,8 +88,20 @@
     <text class="lt-count" wx:if="{{total}}">共 {{total}} 个</text>
   </view>
 
+  <!-- 骨架屏（初始加载） -->
+  <view wx:if="{{loading && spots.length === 0}}">
+    <view class="sk-card" wx:for="{{[1,2,3,4]}}" wx:key="*this">
+      <view class="sk sk-cover"></view>
+      <view class="sk-lines">
+        <view class="sk sk-line w70"></view>
+        <view class="sk sk-line w50"></view>
+        <view class="sk sk-line w40"></view>
+      </view>
+    </view>
+  </view>
+
   <!-- 钓点卡片 -->
-  <view class="spot-card animate-in" wx:for="{{spots}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+  <view class="spot-card animate-in" style="animation-delay:{{index * 0.04}}s" wx:for="{{spots}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
     <view class="sc-cover">
       <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" class="sc-cover-img" />
       <view wx:else class="sc-cover-ph">{{item.waterLabel}}</view>
@@ -111,7 +123,7 @@
   </view>
 
   <!-- 空态 -->
-  <view class="empty" wx:if="{{!loadingMore && spots.length === 0}}">
+  <view class="empty animate-in" wx:if="{{!loadingMore && spots.length === 0}}">
     <text class="empty-emoji">🎣</text>
     <text class="empty-text">还没有符合条件的钓点</text>
     <text class="empty-sub">换个筛选条件或稍后再来看看</text>

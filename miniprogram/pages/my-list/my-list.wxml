@@ -1,7 +1,19 @@
 <view class="list-page">
+  <!-- 骨架屏（初始加载） -->
+  <view wx:if="{{loading && list.length === 0}}">
+    <view class="sk-card" wx:for="{{[1,2,3]}}" wx:key="*this">
+      <view class="sk sk-cover"></view>
+      <view class="sk-lines">
+        <view class="sk sk-line w70"></view>
+        <view class="sk sk-line w50"></view>
+        <view class="sk sk-line w40"></view>
+      </view>
+    </view>
+  </view>
+
   <!-- 钓点类：我的收藏 / 我的投稿 -->
   <block wx:if="{{type === 'favorites' || type === 'submissions'}}">
-    <view class="spot-card card" wx:for="{{list}}" wx:key="id"
+    <view class="spot-card card animate-in" style="animation-delay:{{index * 0.05}}s" wx:for="{{list}}" wx:key="id"
           bindtap="goSpot" data-id="{{item.spotId || item.id}}" data-status="{{item.statusText}}">
       <image wx:if="{{item.cover}}" class="sc-cover" src="{{item.cover}}" mode="aspectFill" />
       <view wx:else class="sc-cover sc-cover-ph">📍</view>
@@ -20,7 +32,7 @@
 
   <!-- 我的渔获 -->
   <block wx:elif="{{type === 'catches'}}">
-    <view class="item-card card" wx:for="{{list}}" wx:key="id">
+    <view class="item-card card animate-in" style="animation-delay:{{index * 0.05}}s" wx:for="{{list}}" wx:key="id">
       <image wx:if="{{item.img}}" class="ic-img" src="{{item.img}}" mode="aspectFill" />
       <view wx:else class="ic-img ic-img-ph">🐟</view>
       <view class="ic-body">
@@ -36,7 +48,7 @@
 
   <!-- 我的评论 -->
   <block wx:else>
-    <view class="item-card card" wx:for="{{list}}" wx:key="id">
+    <view class="item-card card animate-in" style="animation-delay:{{index * 0.05}}s" wx:for="{{list}}" wx:key="id">
       <image wx:if="{{item.img}}" class="ic-img" src="{{item.img}}" mode="aspectFill" />
       <view wx:else class="ic-img ic-img-ph">💬</view>
       <view class="ic-body">
@@ -55,6 +67,6 @@
     <view class="empty-text">{{cfg.empty}}</view>
   </view>
   <!-- 加载更多 -->
-  <view wx:if="{{loading}}" class="loadmore">加载中…</view>
+  <view wx:if="{{loading && list.length > 0}}" class="loadmore">加载中…</view>
   <view wx:if="{{!loading && noMore && list.length > 0}}" class="loadmore">已经到底啦</view>
 </view>

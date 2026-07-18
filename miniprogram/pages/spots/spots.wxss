@@ -168,7 +168,10 @@
 
 /* ---------- 空态 / 加载更多 ---------- */
 .empty { display: flex; flex-direction: column; align-items: center; padding: 100rpx 0; }
-.empty-emoji { font-size: 96rpx; margin-bottom: 24rpx; filter: grayscale(0.2); }
+.empty-emoji {
+  font-size: 110rpx; line-height: 1; margin-bottom: 28rpx;
+  filter: drop-shadow(0 12rpx 30rpx rgba(34,211,238,0.38));
+}
 .empty-text { font-size: 30rpx; color: #cfe6f5; font-weight: 600; }
 .empty-sub { font-size: 24rpx; color: #647489; margin-top: 12rpx; }
 .loadmore { text-align: center; padding: 36rpx 0; }

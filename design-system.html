@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>钓鱼气象 · 青蓝水主题设计系统</title>
+<style>
+  :root{
+    --bg:#070b14; --panel:#0b1626; --panel2:#0e2236;
+    --cyan:#22d3ee; --cyan-soft:#7dd3fc; --sky:#38bdf8;
+    --txt:#eaf2ff; --txt2:#9fb3c8; --txt3:#647489;
+    --excellent:#34d399; --good:#7dd3fc; --normal:#fcd34d; --terrible:#fda4af;
+    --glass:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.025));
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:
+      radial-gradient(120% 55% at 50% -12%,rgba(34,211,238,.10),transparent 60%),
+      radial-gradient(90% 45% at 92% 2%,rgba(56,189,248,.08),transparent 55%),
+      linear-gradient(168deg,#0a1322 0%,#0b1626 46%,#070b14 100%);
+    background-attachment:fixed;
+    color:var(--txt); line-height:1.6; min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:48px 28px 80px}
+  .hero{text-align:center;padding:40px 0 12px}
+  .hero .logo{font-size:64px;filter:drop-shadow(0 12px 30px rgba(34,211,238,.4))}
+  .hero h1{font-size:34px;font-weight:800;margin-top:8px;letter-spacing:1px}
+  .hero p{color:var(--txt2);margin-top:8px;font-size:15px}
+  .section{margin-top:46px}
+  .sec-title{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;margin-bottom:20px}
+  .sec-title .bar{width:6px;height:20px;border-radius:6px;background:linear-gradient(180deg,var(--cyan),#0ea5e9)}
+  .sec-sub{font-size:13px;color:var(--txt3);font-weight:400;margin-left:auto}
+
+  /* 色板 */
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .sw{background:var(--glass);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;backdrop-filter:blur(10px)}
+  .sw .chip{height:54px;border-radius:12px;margin-bottom:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+  .sw .name{font-size:13px;font-weight:600}
+  .sw .hex{font-size:11px;color:var(--txt3);font-family:ui-monospace,Menlo,monospace;margin-top:2px}
+
+  /* 玻璃卡 */
+  .card{background:var(--glass);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:24px;
+    box-shadow:0 18px 50px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}.swatches{grid-template-columns:repeat(2,1fr)}}
+
+  /* 评分标签 */
+  .tags{display:flex;flex-wrap:wrap;gap:10px}
+  .tag{padding:6px 18px;border-radius:999px;font-size:13px;font-weight:700}
+  .t-excellent{background:rgba(16,185,129,.18);color:#6ee7b7;border:1px solid rgba(16,185,129,.35)}
+  .t-good{background:rgba(56,189,248,.18);color:#7dd3fc;border:1px solid rgba(56,189,248,.35)}
+  .t-normal{background:rgba(245,158,11,.18);color:#fcd34d;border:1px solid rgba(245,158,11,.35)}
+  .t-terrible{background:rgba(251,113,133,.18);color:#fda4af;border:1px solid rgba(251,113,133,.35)}
+
+  /* 按钮 */
+  .btns{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;border-radius:999px;font-size:15px;font-weight:700;border:none;cursor:pointer;transition:.15s}
+  .btn-primary{color:#06222b;background:linear-gradient(135deg,#4fe9f7,#22d3ee 45%,#0ea5e9);box-shadow:0 14px 34px rgba(14,165,233,.42),inset 0 1px 0 rgba(255,255,255,.45)}
+  .btn-primary:active{transform:scale(.96);filter:brightness(1.06)}
+  .btn-ghost{color:#cfeeff;background:rgba(255,255,255,.06);border:1px solid rgba(34,211,238,.35)}
+  .btn-ghost:active{transform:scale(.96);background:rgba(34,211,238,.14)}
+  .btn-block{display:flex;width:100%}
+
+  /* 骨架屏 */
+  @keyframes shimmer{0%{background-position:-520px 0}100%{background-position:520px 0}}
+  .sk{background:linear-gradient(100deg,rgba(255,255,255,.05) 28%,rgba(255,255,255,.13) 50%,rgba(255,255,255,.05) 72%);background-size:1040px 100%;animation:shimmer 1.4s infinite linear;border-radius:10px}
+  .sk-row{display:flex;align-items:center;gap:16px;padding:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px;margin-bottom:14px}
+  .sk-cover{width:96px;height:96px;border-radius:14px;flex-shrink:0}
+  .sk-lines{flex:1;display:flex;flex-direction:column;gap:10px}
+  .sk-line{height:14px;border-radius:8px}
+  .w70{width:70%}.w50{width:50%}.w40{width:40%}
+
+  /* 空态 */
+  .empty{display:flex;flex-direction:column;align-items:center;padding:48px 0;text-align:center}
+  .empty .emoji{font-size:72px;filter:drop-shadow(0 12px 30px rgba(34,211,238,.35))}
+  .empty .t{font-size:17px;font-weight:600;color:#cfe6f5;margin-top:14px}
+  .empty .s{font-size:13px;color:var(--txt3);margin-top:6px}
+
+  /* 钓点卡样例 */
+  .spot{display:flex;align-items:center;gap:16px}
+  .spot .cover{width:96px;height:96px;border-radius:16px;background:linear-gradient(150deg,rgba(34,211,238,.18),rgba(56,189,248,.06));display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;position:relative}
+  .spot .lv{position:absolute;left:6px;bottom:6px;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(16,185,129,.2);color:#6ee7b7;border:1px solid rgba(16,185,129,.35)}
+  .spot .body{flex:1;min-width:0}
+  .spot .nm{font-size:17px;font-weight:700}
+  .spot .mt{font-size:12px;color:var(--txt2);margin-top:4px}
+  .spot .pills{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .pill{font-size:11px;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#cfe6f5}
+
+  /* FAB */
+  .fab-demo{position:relative;height:140px;background:var(--glass);border:1px solid rgba(255,255,255,.08);border-radius:24px;overflow:hidden}
+  .fab{position:absolute;right:24px;bottom:24px;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;color:#06222b;
+    background:linear-gradient(135deg,#4fe9f7,#0ea5e9);box-shadow:0 16px 40px rgba(14,165,233,.5)}
+  .fab-demo .hint{position:absolute;left:24px;top:24px;font-size:13px;color:var(--txt2)}
+  .typo{display:flex;flex-direction:column;gap:6px}
+  .typo .row{display:flex;align-items:baseline;gap:14px}
+  .typo .lv{font-size:12px;color:var(--txt3);width:60px}
+  .typo .sm{font-size:13px;color:var(--txt2)}
+  .typo .md{font-size:17px}
+  .typo .lg{font-size:24px;font-weight:700}
+  .typo .xl{font-size:34px;font-weight:800}
+  footer{text-align:center;margin-top:60px;color:var(--txt3);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="logo">🎣</div>
+    <h1>钓鱼气象 · 设计系统</h1>
+    <p>青蓝水主题 v3 · 深海蓝黑背景 × 青蓝主色 × 四档语义评分</p>
+  </div>
+
+  <!-- 色板 -->
+  <div class="section">
+    <div class="sec-title"><span class="bar"></span>色彩令牌<span class="sec-sub">Color Tokens</span></div>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#070b14;border:1px solid rgba(255,255,255,.08)"></div><div class="name">背景深空</div><div class="hex">#070b14</div></div>
+      <div class="sw"><div class="chip" style="background:linear-gradient(135deg,#4fe9f7,#22d3ee 45%,#0ea5e9)"></div><div class="name">主色 青蓝</div><div class="hex">#22d3ee</div></div>
+      <div class="sw"><div class="chip" style="background:#38bdf8"></div><div class="name">辅助 天蓝</div><div class="hex">#38bdf8</div></div>
+      <div class="sw"><div class="chip" style="background:#34d399"></div><div class="name">优 · 翡翠绿</div><div class="hex">#34d399</div></div>
+      <div class="sw"><div class="chip" style="background:#fcd34d"></div><div class="name">一般 · 琥珀</div><div class="hex">#fcd34d</div></div>
+      <div class="sw"><div class="chip" style="background:#fda4af"></div><div class="name">差 · 珊瑚红</div><div class="hex">#fda4af</div></div>
+    </div>
+  </div>
+
+  <!-- 评分标签 -->
+  <div class="section">
+    <div class="sec-title"><span class="bar"></span>评分等级标签<span class="sec-sub">4 档语义色</span></div>
+    <div class="card">
+      <div class="tags">
+        <span class="tag t-excellent">优 85</span>
+        <span class="tag t-good">良 68</span>
+        <span class="tag t-normal">一般 52</span>
+        <span class="tag t-terrible">差 33</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 组件 -->
+  <div class="section">
+    <div class="sec-title"><span class="bar"></span>核心组件<span class="sec-sub">Components</span></div>
+    <div class="grid2">
+      <div class="card">
+        <div style="font-size:13px;color:var(--txt2);margin-bottom:14px">玻璃卡片 · Glass Card</div>
+        <div class="spot">
+          <div class="cover">🎣<span class="lv">优</span></div>
+          <div class="body">
+            <div class="nm">尚湖水库</div>
+            <div class="mt">常熟 · 距您 2.3km</div>
+            <div class="pills"><span class="pill">水库</span><span class="pill">按天收费</span><span class="pill">❤ 128</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;color:var(--txt2);margin-bottom:14px">按钮 · Buttons</div>
+        <div class="btns" style="margin-bottom:12px">
+          <button class="btn btn-primary">微信一键登录</button>
+          <button class="btn btn-ghost">切换城市</button>
+        </div>
+        <button class="btn btn-primary btn-block">发布钓点</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 骨架屏 -->
+  <div class="section">
+    <div class="sec-title"><span class="bar"></span>加载骨架屏<span class="sec-sub">Skeleton · Shimmer</span></div>
+    <div class="card">
+      <div class="sk-row"><div class="sk sk-cover"></div><div class="sk-lines"><div class="sk sk-line w70"></div><div class="sk sk-line w50"></div><div class="sk sk-line w40"></div></div></div>
+      <div class="sk-row"><div class="sk sk-cover"></div><div class="sk-lines"><div class="sk sk-line w70"></div><div class="sk sk-line w50"></div><div class="sk sk-line w40"></div></div></div>
+    </div>
+  </div>
+
+  <!-- 空态 -->
+  <div class="section">
+    <div class="sec-title"><span class="bar"></span>空状态<span class="sec-sub">Empty State</span></div>
+    <div class="card">
+      <div class="empty">
+        <div class="emoji">🎣</div>
+        <div class="t">还没有符合条件的钓点</div>
+        <div class="s">换个筛选条件或稍后再来看看</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 浮动按钮 -->
+  <div class="section">
+    <div class="sec-title"><span class="bar"></span>浮动发布按钮<span class="sec-sub">FAB</span></div>
+    <div class="fab-demo">
+      <div class="hint">快速发布钓点 / 渔获的常驻入口</div>
+      <div class="fab">＋</div>
+    </div>
+  </div>
+
+  <!-- 字体 -->
+  <div class="section">
+    <div class="sec-title"><span class="bar"></span>字体梯度<span class="sec-sub">Type Scale</span></div>
+    <div class="card">
+      <div class="typo">
+        <div class="row"><span class="lv">XL</span><span class="xl">综合评分 86</span></div>
+        <div class="row"><span class="lv">LG</span><span class="lg">钓鱼气象</span></div>
+        <div class="row"><span class="lv">MD</span><span class="md">尚湖水库 · 推荐钓点</span></div>
+        <div class="row"><span class="lv">SM</span><span class="sm">气压 1012hPa · 风力 3级 · 宜出钓</span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>钓鱼气象 · 青蓝水主题设计系统 v3 · 由 UiDesigner 打磨生成</footer>
+</div>
+</body>
+</html>
