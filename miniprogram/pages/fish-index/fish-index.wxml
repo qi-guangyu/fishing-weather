@@ -28,7 +28,7 @@
     <!-- 鱼种选择 -->
     <scroll-view scroll-x class="fish-species-scroll" enhanced show-scrollbar="{{false}}">
       <view class="fish-species {{fishSpeciesKey === item.key ? 'fs-active' : ''}}" wx:for="{{fishSpeciesList}}" wx:key="key" data-key="{{item.key}}" bindtap="switchFishSpecies">
-        <text class="fs-icon">{{item.icon}}</text>
+        <image class="fs-icon" src="{{item.icon}}" mode="aspectFit" />
         <text class="fs-name">{{item.name}}</text>
       </view>
     </scroll-view>
@@ -55,7 +55,7 @@
         <view class="ft-row" wx:for="{{fishHourly}}" wx:key="index">
           <text class="ft-time">{{item.time}}</text>
           <view class="ft-weather">
-            <text class="ft-icon">{{item.icon}}</text>
+            <image class="ft-icon" src="{{item.icon}}" mode="aspectFit" />
             <text class="ft-desc">{{item.weather}}</text>
           </view>
           <text class="ft-temp">{{item.temperature}}°</text>
