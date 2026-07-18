@@ -1,4 +1,4 @@
-<!-- 钓点推荐页面 -->
+<!-- 钓点列表页面 -->
 <view class="page-container">
 
   <!-- 顶部栏 -->
@@ -39,13 +39,89 @@
     <view class="score-bar"><view class="score-bar-fill" style="width:{{score}}%"></view></view>
   </view>
 
-  <!-- 钓点推荐 -->
-  <view class="ai-suggestion animate-in" style="animation-delay:0.15s" wx:if="{{aiAdvice}}">
-    <view class="ai-header">📍 钓点推荐</view>
-    <view class="ai-text">
-      <view class="ai-title">{{aiAdvice.title}}</view>
-      <view class="ai-section">{{aiAdvice.spot}}</view>
+  <!-- 搜索 + 筛选 -->
+  <view class="toolbar">
+    <view class="search-box">
+      <text class="sb-icon">🔍</text>
+      <input class="sb-input" placeholder="搜索钓点名称 / 地址" value="{{keyword}}" bindinput="onSearchInput" confirm-type="search" />
+      <text wx:if="{{keyword}}" class="sb-clear" bindtap="clearKeyword">✕</text>
     </view>
+    <view class="filter-toggle" bindtap="toggleFilters">
+      <text>筛选</text>
+      <text class="ft-arrow">{{showFilters ? '▲' : '▼'}}</text>
+    </view>
+  </view>
+
+  <!-- 筛选面板 -->
+  <view class="filter-panel" wx:if="{{showFilters}}">
+    <view class="fp-group">
+      <view class="fp-label">水域类型</view>
+      <view class="fp-chips">
+        <view wx:for="{{waterTypes}}" wx:key="value"
+              class="chip {{waterType === item.value ? 'on' : ''}}"
+              data-val="{{item.value}}" bindtap="pickWater">{{item.label}}</view>
+      </view>
+    </view>
+    <view class="fp-group">
+      <view class="fp-label">收费</view>
+      <view class="fp-chips">
+        <view wx:for="{{feeTypes}}" wx:key="value"
+              class="chip {{feeType === item.value ? 'on' : ''}}"
+              data-val="{{item.value}}" bindtap="pickFee">{{item.label}}</view>
+      </view>
+    </view>
+    <view class="fp-group">
+      <view class="fp-label">排序</view>
+      <view class="fp-chips">
+        <view wx:for="{{sorts}}" wx:key="value"
+              class="chip {{sort === item.value ? 'on' : ''}}"
+              data-val="{{item.value}}" bindtap="pickSort">{{item.label}}</view>
+      </view>
+    </view>
+    <view class="fp-reset" bindtap="resetFilters">重置筛选</view>
+  </view>
+
+  <!-- 列表标题 -->
+  <view class="list-title">
+    <view class="st-bar"></view>
+    <text class="lt-text">推荐钓点</text>
+    <text class="lt-count" wx:if="{{total}}">共 {{total}} 个</text>
+  </view>
+
+  <!-- 钓点卡片 -->
+  <view class="spot-card animate-in" wx:for="{{spots}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+    <view class="sc-cover">
+      <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" class="sc-cover-img" />
+      <view wx:else class="sc-cover-ph">{{item.waterLabel}}</view>
+      <view class="lv-badge tag-{{item.levelKey}}">{{item.levelLabel}}</view>
+    </view>
+    <view class="sc-body">
+      <view class="sc-name">{{item.name}}</view>
+      <view class="sc-meta">
+        <text class="sc-region">{{item.city}}<text wx:if="{{item.district}}">·{{item.district}}</text></text>
+        <text class="sc-dist" wx:if="{{item.distText}}">📍 {{item.distText}}</text>
+      </view>
+      <view class="sc-tags">
+        <text class="pill">{{item.waterLabel}}</text>
+        <text class="pill" wx:if="{{item.feeLabel}}">{{item.feeLabel}}</text>
+        <text class="pill" wx:if="{{item.favorites_count}}">❤ {{item.favorites_count}}</text>
+      </view>
+    </view>
+    <view class="sc-fav {{item.favorited ? 'on' : ''}}" catchtap="toggleFav" data-id="{{item.id}}">❤</view>
+  </view>
+
+  <!-- 空态 -->
+  <view class="empty" wx:if="{{!loadingMore && spots.length === 0}}">
+    <text class="empty-emoji">🎣</text>
+    <text class="empty-text">还没有符合条件的钓点</text>
+    <text class="empty-sub">换个筛选条件或稍后再来看看</text>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="loadmore" wx:if="{{spots.length > 0}}">
+    <text wx:if="{{loadingMore}}" class="lm-text">加载中...</text>
+    <text wx:elif="{{finished}}" class="lm-text">— 已经到底啦 —</text>
+    <text wx:else class="lm-more" bindtap="loadMore">加载更多</text>
   </view>
 
   <view style="height:40rpx"></view>

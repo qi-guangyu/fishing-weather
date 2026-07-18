@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/fish-index/fish-index",
     "pages/spots/spots",
+    "pages/spot-detail/spot-detail",
     "pages/login/login",
     "pages/profile/profile"
   ],
