@@ -104,6 +104,19 @@ Page({
     } catch (e) { /* 忽略 */ }
   },
 
+  goPublishCatch() {
+    const token = wx.getStorageSync('token')
+    if (!token) {
+      wx.showToast({ title: '请先登录', icon: 'none' })
+      setTimeout(() => wx.navigateTo({ url: '/pages/login/login' }), 700)
+      return
+    }
+    wx.navigateTo({
+      url: '/pages/catch-publish/catch-publish?spotId=' + this.data.id +
+        '&spotName=' + encodeURIComponent(this.data.spot.name || '')
+    })
+  },
+
   async toggleFav() {
     const token = wx.getStorageSync('token')
     if (!token) {

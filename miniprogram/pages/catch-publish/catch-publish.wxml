@@ -1,0 +1,53 @@
+<view class="pub-page">
+  <!-- 头部 -->
+  <view class="pub-hero">
+    <view class="ph-emoji">🎣</view>
+    <view class="ph-title">发布渔获</view>
+    <view class="ph-sub">晒晒你的战利品，记录每一次爆护</view>
+  </view>
+
+  <view class="card">
+    <!-- 选择钓点 -->
+    <view class="field">
+      <view class="f-label">选择钓点 <text class="req">*</text></view>
+      <picker wx:if="{{spots.length}}" mode="selector" range="{{spots}}" range-key="name"
+              value="{{spotIndex}}" bindchange="onSpotChange" disabled="{{presetSpotId}}">
+        <view class="f-picker {{selectedSpotId ? '' : 'ph'}}">
+          {{selectedSpotId ? (selectedSpotName || (spots[spotIndex] ? spots[spotIndex].name : '已选择')) : '请选择钓点'}}
+        </view>
+      </picker>
+      <view wx:else class="f-picker ph">{{presetSpotId ? (selectedSpotName || '已选择钓点') : '加载钓点中…'}}</view>
+    </view>
+
+    <!-- 照片 -->
+    <view class="field">
+      <view class="f-label">渔获照片</view>
+      <view class="img-row">
+        <view wx:if="{{imagePath}}" class="img-thumb">
+          <image src="{{imagePath}}" mode="aspectFill" class="img-thumb-img" />
+          <view class="img-del" bindtap="removeImage">✕</view>
+        </view>
+        <view wx:else class="img-add" bindtap="chooseImage">
+          <view class="img-add-plus">＋</view>
+          <view class="img-add-tip">添加照片</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 重量 -->
+    <view class="field">
+      <view class="f-label">重量 (kg) <text class="req">*</text></view>
+      <input class="f-input" type="digit" placeholder="例如 2.5" value="{{weight}}" bindinput="onWeight" />
+    </view>
+
+    <!-- 心情 -->
+    <view class="field">
+      <view class="f-label">心情 / 备注</view>
+      <textarea class="f-textarea" placeholder="这波怎么钓的？用了什么饵？" value="{{feeling}}" bindinput="onFeeling" maxlength="200" />
+    </view>
+  </view>
+
+  <button class="btn btn-primary btn-block pub-submit" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}">
+    {{submitting ? '发布中…' : '发布渔获'}}
+  </button>
+</view>

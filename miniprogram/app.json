@@ -6,7 +6,9 @@
     "pages/spot-detail/spot-detail",
     "pages/login/login",
     "pages/profile/profile",
-    "pages/my-list/my-list"
+    "pages/my-list/my-list",
+    "pages/catch-publish/catch-publish",
+    "pages/spot-submit/spot-submit"
   ],
   "window": {
     "navigationBarBackgroundColor": "#0f172a",
@@ -53,7 +55,7 @@
       "desc": "用于获取您附近的天气和钓点信息"
     }
   },
-  "requiredPrivateInfos": ["getLocation"],
+  "requiredPrivateInfos": ["getLocation", "chooseLocation"],
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"

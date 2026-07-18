@@ -86,7 +86,8 @@
   <!-- 底部操作栏 -->
   <view class="d-footbar">
     <view class="d-fav {{favorited ? 'on' : ''}}" bindtap="toggleFav">❤ {{favorited ? '已收藏' : '收藏'}}</view>
-    <view class="d-stat">🐟 渔获 {{catches.length}} · 💬 {{comments.length}}</view>
+    <view class="d-pub" bindtap="goPublishCatch">🎣 晒渔获</view>
+    <view class="d-stat">🐟 {{catches.length}} · 💬 {{comments.length}}</view>
   </view>
 
 </view>

@@ -24,6 +24,18 @@
       <text class="mi-arrow">›</text>
     </view>
 
+    <!-- 发布入口 -->
+    <view class="menu-item" bindtap="goPublish" data-page="catch-publish">
+      <view class="mi-icon">🎣</view>
+      <text class="mi-label">发布渔获</text>
+      <text class="mi-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goPublish" data-page="spot-submit">
+      <view class="mi-icon">📍</view>
+      <text class="mi-label">投稿钓点</text>
+      <text class="mi-arrow">›</text>
+    </view>
+
     <!-- 用户中心入口 -->
     <view class="menu-item" bindtap="goList" data-type="catches">
       <view class="mi-icon">🎣</view>

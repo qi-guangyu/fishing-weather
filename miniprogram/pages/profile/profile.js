@@ -51,6 +51,12 @@ Page({
     wx.navigateTo({ url: '/pages/my-list/my-list?type=' + type })
   },
 
+  goPublish(e) {
+    if (!isLoggedIn()) { this.goLogin(); return }
+    const page = e.currentTarget.dataset.page
+    wx.navigateTo({ url: '/pages/' + page + '/' + page })
+  },
+
   handleLogout() {
     wx.showModal({
       title: '确认退出',

@@ -1,0 +1,103 @@
+<view class="pub-page">
+  <!-- 头部 -->
+  <view class="pub-hero">
+    <view class="ph-emoji">📍</view>
+    <view class="ph-title">投稿钓点</view>
+    <view class="ph-sub">分享你私藏的好钓位，审核通过后将展示给所有人</view>
+  </view>
+
+  <view class="card">
+    <view class="field">
+      <view class="f-label">钓点名称 <text class="req">*</text></view>
+      <input class="f-input" placeholder="例如 尚湖水库" value="{{name}}" bindinput="onName" />
+    </view>
+
+    <view class="field">
+      <view class="f-label">位置 <text class="req">*</text></view>
+      <view class="f-picker {{latitude ? '' : 'ph'}}" bindtap="chooseLocation">
+        {{latitude ? (locName || address || '已选择位置') : '点击选择位置'}}
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="f-label">水域类型</view>
+      <picker mode="selector" range="{{waterTypes}}" range-key="label" value="{{waterIndex}}" bindchange="onWaterChange">
+        <view class="f-picker">{{waterTypes[waterIndex].label}}</view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <view class="f-label">收费类型</view>
+      <picker mode="selector" range="{{feeTypes}}" range-key="label" value="{{feeIndex}}" bindchange="onFeeChange">
+        <view class="f-picker">{{feeTypes[feeIndex].label}}</view>
+      </picker>
+    </view>
+
+    <view class="field" wx:if="{{feeTypes[feeIndex].key !== 'free'}}">
+      <view class="f-label">收费标准</view>
+      <input class="f-input" placeholder="例如 50元/天" value="{{feePrice}}" bindinput="onFeePrice" />
+    </view>
+
+    <view class="field">
+      <view class="f-label">目标鱼种</view>
+      <input class="f-input" placeholder="例如 鲫鱼、鲤鱼" value="{{targetFish}}" bindinput="onTargetFish" />
+    </view>
+
+    <view class="field">
+      <view class="f-label">平均水深 (m)</view>
+      <input class="f-input" type="digit" placeholder="例如 3.5" value="{{avgDepth}}" bindinput="onAvgDepth" />
+    </view>
+
+    <view class="field">
+      <view class="f-label">最佳时段</view>
+      <input class="f-input" placeholder="例如 清晨 / 夜钓" value="{{bestTime}}" bindinput="onBestTime" />
+    </view>
+
+    <view class="field">
+      <view class="f-label">最佳季节</view>
+      <input class="f-input" placeholder="例如 春秋" value="{{bestSeason}}" bindinput="onBestSeason" />
+    </view>
+
+    <view class="field">
+      <view class="f-label">竿长限制</view>
+      <input class="f-input" placeholder="例如 5.4m 以内" value="{{rodLimit}}" bindinput="onRodLimit" />
+    </view>
+
+    <view class="field">
+      <view class="f-label">汛期提醒</view>
+      <input class="f-input" placeholder="例如 雨季涨水勿近岸" value="{{floodWarning}}" bindinput="onFloodWarning" />
+    </view>
+
+    <view class="field">
+      <view class="f-label">设施</view>
+      <view class="switch-row">
+        <view class="sw-item"><text>🅿️ 停车</text><switch checked="{{parking}}" bindchange="onParking" color="#22d3ee" /></view>
+        <view class="sw-item"><text>🚻 洗手间</text><switch checked="{{restroom}}" bindchange="onRestroom" color="#22d3ee" /></view>
+        <view class="sw-item"><text>🌳 遮阴</text><switch checked="{{shade}}" bindchange="onShade" color="#22d3ee" /></view>
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="f-label">封面照片</view>
+      <view class="img-row">
+        <view wx:if="{{imagePath}}" class="img-thumb">
+          <image src="{{imagePath}}" mode="aspectFill" class="img-thumb-img" />
+          <view class="img-del" bindtap="removeImage">✕</view>
+        </view>
+        <view wx:else class="img-add" bindtap="chooseImage">
+          <view class="img-add-plus">＋</view>
+          <view class="img-add-tip">添加照片</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="f-label">钓点描述</view>
+      <textarea class="f-textarea" placeholder="介绍下这个钓位的水情、饵料、注意事项…" value="{{description}}" bindinput="onDescription" maxlength="500" />
+    </view>
+  </view>
+
+  <button class="btn btn-primary btn-block pub-submit" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}">
+    {{submitting ? '投稿中…' : '提交投稿'}}
+  </button>
+</view>
