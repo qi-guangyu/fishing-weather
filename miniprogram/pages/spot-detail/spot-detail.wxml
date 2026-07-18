@@ -16,6 +16,11 @@
       <view class="lv-badge tag-{{levelKey}}">{{levelLabel}}</view>
     </view>
     <view class="d-sub">{{spot.city}}<text wx:if="{{spot.district}}">·{{spot.district}}</text><text wx:if="{{spot.address}}"> · {{spot.address}}</text></view>
+    <view class="d-nav" bindtap="onNavigate">
+      <text class="d-nav-ic">🧭</text>
+      <text class="d-nav-txt">导航前往钓点</text>
+      <text class="d-nav-go">导航 ›</text>
+    </view>
     <view class="d-tags">
       <text class="pill">{{waterLabel}}</text>
       <text class="pill" wx:if="{{feeLabel}}">{{feeLabel}}</text>

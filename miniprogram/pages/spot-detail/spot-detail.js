@@ -135,6 +135,22 @@ Page({
     }
   },
 
+  // 钓点导航：调起微信内置地图，可跳转第三方导航 App
+  onNavigate() {
+    const s = this.data.spot
+    if (!s || s.latitude == null || s.longitude == null) {
+      wx.showToast({ title: '该钓点暂无坐标', icon: 'none' })
+      return
+    }
+    wx.openLocation({
+      latitude: Number(s.latitude),
+      longitude: Number(s.longitude),
+      name: s.name || '钓点',
+      address: [s.city, s.district, s.address].filter(Boolean).join(''),
+      scale: 16
+    })
+  },
+
   onCommentInput(e) { this.setData({ commentText: e.detail.value }) },
 
   async submitComment() {

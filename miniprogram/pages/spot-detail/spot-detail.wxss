@@ -16,6 +16,19 @@
 .d-sub { font-size: 26rpx; color: #9fb3c8; margin-top: 14rpx; }
 .d-tags { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 18rpx; }
 
+/* 导航入口 */
+.d-nav {
+  display: flex; align-items: center; gap: 12rpx;
+  margin-top: 18rpx; padding: 18rpx 22rpx;
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, rgba(34,211,238,0.16), rgba(56,189,248,0.08));
+  border: 1rpx solid rgba(34,211,238,0.35);
+}
+.d-nav:active { opacity: 0.7; }
+.d-nav-ic { font-size: 32rpx; }
+.d-nav-txt { flex: 1; font-size: 28rpx; color: #eaf2ff; font-weight: 600; }
+.d-nav-go { font-size: 26rpx; color: #22d3ee; font-weight: 700; }
+
 /* 评分等级徽标（与 .tag-* 配色联动） */
 .lv-badge {
   padding: 6rpx 22rpx; border-radius: 999rpx;
