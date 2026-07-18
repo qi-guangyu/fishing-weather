@@ -1,10 +1,14 @@
 /**
  * 统一请求封装
  */
-const app = getApp()
 
 function request(options) {
   return new Promise((resolve, reject) => {
+    const app = getApp()
+    if (!app || !app.globalData) {
+      reject({ code: -1, message: '应用未初始化' })
+      return
+    }
     const token = wx.getStorageSync('token')
     wx.request({
       url: (options.baseUrl || app.globalData.apiBase) + options.url,
