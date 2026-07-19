@@ -512,7 +512,8 @@ async function proxyQweather(type, location) {
   const typeMap = {
     'now': '/v7/weather/now',
     '24h': '/v7/weather/24h',
-    '7d': '/v7/weather/7d'
+    '7d': '/v7/weather/7d',
+    '15d': '/v7/weather/15d'
   };
   const path = typeMap[type];
   if (!path) return null;

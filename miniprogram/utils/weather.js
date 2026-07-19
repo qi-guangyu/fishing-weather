@@ -396,7 +396,7 @@ async function fetchWeather(city) {
     const now = nowData.now
     const hrData = await qweatherRequest('/v7/weather/24h', { location: loc })
     const hourly = hrData.hourly || []
-    const dData = await qweatherRequest('/v7/weather/7d', { location: loc })
+    const dData = await qweatherRequest('/v7/weather/15d', { location: loc })
     const daily = dData.daily || []
     return {
       province: getProvinceForCity(city) || '',
