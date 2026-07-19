@@ -15,11 +15,44 @@ const fs = require('fs');
 const zlib = require('zlib');
 const { seedDemoSpots } = require('./seed');
 
+// ============ 零依赖 .env 加载器 ============
+// 本地开发/自用时，把密钥写到 backend/.env（KEY=VALUE，每行一个，# 开头为注释），
+// 云托管部署则直接在控制台「环境变量」里配置，二者取并集（已存在的 env 不覆盖）。
+// 注意：backend/.env 已被 .gitignore 忽略，不会提交到仓库。
+(function loadDotEnv() {
+  const envPath = path.join(__dirname, '.env');
+  if (!fs.existsSync(envPath)) return;
+  try {
+    const text = fs.readFileSync(envPath, 'utf-8');
+    text.split('\n').forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) return;
+      const eq = trimmed.indexOf('=');
+      if (eq === -1) return;
+      const key = trimmed.slice(0, eq).trim();
+      let val = trimmed.slice(eq + 1).trim();
+      // 去掉成对引号
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      if (key && process.env[key] === undefined) process.env[key] = val;
+    });
+    console.log('[env] 已加载 backend/.env');
+  } catch (e) {
+    console.warn('[env] 读取 .env 失败:', e.message);
+  }
+})();
+
 // ============ 配置 ============
 const PORT = process.env.PORT || 3456;
 const JWT_SECRET = process.env.JWT_SECRET || 'fishing-spot-secret-key-2026';
-// 微信小程序配置（部署到Render时设置环境变量）
-const WECHAT_APPID = process.env.WECHAT_APPID || '';
+// 微信小程序配置：
+//   WECHAT_APPID  默认取项目真实 AppID（miniprogram/project.config.json），
+//                 也可在环境变量/backend/.env 用 WECHAT_APPID 覆盖。
+//   WECHAT_SECRET 必须提供！微信 code2session 需要它才能把登录 code 换成 openid。
+//                 本地：写进 backend/.env（WECHAT_SECRET=xxxx）；
+//                 云托管：控制台「环境变量」里加 WECHAT_SECRET。
+const WECHAT_APPID = process.env.WECHAT_APPID || 'wxd3ab84cf4f40848b';
 const WECHAT_SECRET = process.env.WECHAT_SECRET || '';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'data', 'uploads');
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'fishing.db');
@@ -598,6 +631,13 @@ app.get('/api/auth/me', authRequired, (req, res) => {
 app.post('/api/auth/wechat-login', async (req, res) => {
   const { code } = req.body;
   if (!code) return res.status(400).json({ error: '缺少code参数' });
+  // 提前校验密钥是否配置，给出可操作的明确错误（而非微信侧笼统报错）
+  if (!WECHAT_SECRET) {
+    return res.status(500).json({
+      error: '服务器未配置微信 AppSecret（WECHAT_SECRET）。请在云托管「环境变量」或 backend/.env 中配置后重启后端。',
+      code: 'MISSING_APPSECRET'
+    });
+  }
   try {
     // 调用微信API换取openid
     const https = require('https');
@@ -610,7 +650,10 @@ app.post('/api/auth/wechat-login', async (req, res) => {
         resp.on('end', () => resolve(JSON.parse(data)));
       }).on('error', reject);
     });
-    if (!wxResp.openid) return res.status(401).json({ error: '微信登录失败: ' + (wxResp.errmsg || '未知错误') });
+    if (!wxResp.openid) {
+      // 常见：40013(invalid appid) / 40001(invalid secret) / 41008(缺少code) 等
+      return res.status(401).json({ error: '微信登录失败: ' + (wxResp.errmsg || '未知错误'), code: wxResp.errcode });
+    }
 
     // 查找或创建用户
     let user = dbWrap.prepare('SELECT * FROM users WHERE wechat_openid = ?').get(wxResp.openid);
@@ -629,9 +672,10 @@ app.post('/api/auth/wechat-login', async (req, res) => {
 });
 
 // ---------- 更新用户资料（昵称 / 头像） ----------
-// 兼容两种提交方式：
+// 兼容三种提交方式：
 //  1) 仅昵称：application/json  PUT { nickname }
-//  2) 含头像：multipart/form-data（wx.uploadFile），file 字段名 avatar，formData 可带 nickname
+//  2) 含头像（直连模式）：multipart/form-data（wx.uploadFile），file 字段名 avatar
+//  3) 含头像（callContainer 模式）：PUT JSON { nickname, avatarBase64 }（base64 经私有协议上报，绕开 uploadFile 拦截）
 app.put('/api/auth/profile', authRequired, upload.single('avatar'), (req, res) => {
   try {
     const userId = req.user.id;
@@ -644,6 +688,22 @@ app.put('/api/auth/profile', authRequired, upload.single('avatar'), (req, res) =
     if (req.file) {
       sets.push('avatar = ?');
       values.push('/uploads/' + req.file.filename);
+    } else if (req.body && req.body.avatarBase64) {
+      // callContainer 模式：wx.uploadFile 无法走私有协议，前端改用 base64 经 PUT JSON 上报
+      try {
+        const raw = String(req.body.avatarBase64);
+        const m = raw.match(/^data:(image\/\w+);base64,(.+)$/);
+        const b64 = m ? m[2] : raw;
+        const ext = m ? m[1].split('/')[1] : 'png';
+        const safeExt = ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext) ? ext : 'png';
+        const buf = Buffer.from(b64, 'base64');
+        const fname = Date.now() + '-' + uuidv4().slice(0, 8) + '.' + safeExt;
+        fs.writeFileSync(path.join(UPLOAD_DIR, fname), buf);
+        sets.push('avatar = ?');
+        values.push('/uploads/' + fname);
+      } catch (e) {
+        console.warn('[profile] avatarBase64 解析失败:', e.message);
+      }
     }
     if (sets.length === 0) {
       return res.json({ user: req.user });

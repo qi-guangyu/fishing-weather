@@ -48,3 +48,7 @@ miniprogram/project.private.config.json
 # Large icon assets (use only the resized icon-144 in package)
 miniprogram/assets/icons/
 miniprogram/assets/icon-1024.png
+
+# 本地密钥（切勿提交）
+.env
+backend/.env

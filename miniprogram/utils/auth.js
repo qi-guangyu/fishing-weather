@@ -71,38 +71,43 @@ function logout() {
 
 /**
  * 更新用户资料（昵称 / 头像）
- * 头像为微信 chooseAvatar 返回的本地临时文件路径，需上传到后端持久化。
- * 兼容：仅昵称（JSON PUT）/ 含头像（multipart 上传）。
+ * - 头像为微信 chooseAvatar 返回的本地临时文件路径。
+ * - callContainer 模式下 wx.uploadFile 直连 apiBase 会被网关拦截，故改为：
+ *   读文件为 base64 → 经 request() PUT（走 callContainer 私有协议）上报 { nickname, avatarBase64 }。
+ * - 头像/昵称更新失败一律视为「非致命」：resolve(null)，绝不影响登录主流程。
  */
 function updateProfile({ nickname, avatarPath } = {}) {
   const token = wx.getStorageSync('token')
   const header = token ? { Authorization: 'Bearer ' + token } : {}
-  return new Promise((resolve, reject) => {
-    if (avatarPath) {
-      wx.uploadFile({
-        url: getApp().globalData.apiBase + '/api/auth/profile',
-        filePath: avatarPath,
-        name: 'avatar',
-        header,
-        formData: nickname ? { nickname } : {},
-        success(res) {
-          try {
-            const data = JSON.parse(res.data)
-            resolve(data.user || null)
-          } catch (e) {
-            resolve(null)
-          }
-        },
-        fail: reject
-      })
-    } else if (nickname) {
+  return new Promise((resolve) => {
+    if (!nickname && !avatarPath) { resolve(null); return }
+
+    const send = (avatarBase64) => {
+      const data = {}
+      if (nickname) data.nickname = nickname
+      if (avatarBase64) data.avatarBase64 = avatarBase64
       request({
         url: '/api/auth/profile',
         method: 'PUT',
-        data: { nickname }
-      }).then(d => resolve(d.user || null)).catch(reject)
+        header,
+        data
+      }).then(d => resolve((d && d.user) || null)).catch(() => resolve(null))
+    }
+
+    if (avatarPath) {
+      const ext = (avatarPath.match(/\.(\w+)(?:\?.*)?$/) || [, 'png'])[1].toLowerCase()
+      const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
+        : ext === 'webp' ? 'image/webp'
+        : ext === 'gif' ? 'image/gif'
+        : 'image/png'
+      wx.getFileSystemManager().readFile({
+        filePath: avatarPath,
+        encoding: 'base64',
+        success: r => send('data:' + mime + ';base64,' + r.data),
+        fail: () => send(undefined) // 读不到就只传昵称，不阻断
+      })
     } else {
-      resolve(null)
+      send(undefined)
     }
   })
 }
