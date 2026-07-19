@@ -1,5 +1,4 @@
 const { request } = require('../../utils/request')
-const app = getApp()
 
 const TYPE_MAP = {
   catches: { title: '我的渔获', api: '/api/user/catches', empty: '还没有发布渔获，去钓点详情页晒一晒吧' },
@@ -66,7 +65,8 @@ Page({
   },
 
   normalize(it) {
-    const base = (app.globalData && app.globalData.apiBase) || 'http://localhost:3456'
+    const app = getApp()
+    const base = (app && app.globalData && app.globalData.apiBase) || 'http://localhost:3456'
     const date = toDate(it.created_at)
     if (this.data.type === 'favorites') {
       const imgs = Array.isArray(it.images) ? it.images : []

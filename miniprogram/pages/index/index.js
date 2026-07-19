@@ -2,8 +2,6 @@ const weather = require('../../utils/weather')
 const { fetchWeather, calcFishScore, getScoreTag, getAIAdvice } = weather
 const { isLoggedIn } = require('../../utils/auth')
 
-const app = getApp()
-
 Page({
   data: {
     // 城市
@@ -34,13 +32,22 @@ Page({
   },
 
   onLoad() {
-    this.setData({ currentCity: app.globalData.currentCity })
+    const app = getApp()
+    try {
+      this.setData({ currentCity: app && app.globalData ? app.globalData.currentCity : '常熟', loading: false })
+    } catch (e) {
+      console.error('[首页] onLoad 初始 setData 失败:', e)
+    }
+    // 异步加载数据（不再 await，避免任何错误阻塞渲染）
     this.loadWeatherData()
-    this.setData({ isLoggedIn: isLoggedIn() })
+    try {
+      this.setData({ isLoggedIn: isLoggedIn() })
+    } catch (e) { /* auth 失败不影响主流程 */ }
   },
 
   onShow() {
-    if (app.globalData.currentCity !== this.data.currentCity) {
+    const app = getApp()
+    if (app && app.globalData && app.globalData.currentCity !== this.data.currentCity) {
       this.setData({ currentCity: app.globalData.currentCity })
       this.loadWeatherData()
     }
@@ -54,7 +61,19 @@ Page({
   // ==================== 加载天气数据 ====================
   async loadWeatherData(forceRefresh) {
     const city = this.data.currentCity
-    this.setData({ loading: true })
+
+    // 真机首屏兜底：callContainer 可能在真机挂起，先渲染一份本地数据，
+    // 保证页面立刻有内容（loading 不阻塞内容），异步拿到真实数据再覆盖。
+    if (!this.data.weather || !this.data.weather.city) {
+      try {
+        const mock = weather.getMockWeather(city)
+        this.processWeatherData(mock)
+      } catch (e) {
+        console.error('[首页] mock 兜底渲染失败:', e && e.message ? e.message : e, e && e.stack ? '\n' + e.stack : '')
+        // 兜底失败也强制显示内容（不让 WXML 永远等数据）
+        this.setData({ loading: false, weather: { temperature: '--', weather: '暂无数据' }, score: 0, scoreLevel: '无', bestTime: '--:--', dataSource: '数据加载失败' })
+      }
+    }
 
     // 检查缓存（30分钟）
     const cacheKey = 'weather_cache_' + city
@@ -75,6 +94,8 @@ Page({
       this.processWeatherData(data)
     } catch (e) {
       console.error('[天气] 加载失败:', e)
+      // 虽加载失败，但 mock 兜底数据已渲染，取消 loading 让内容显示
+      this.setData({ loading: false })
       wx.showToast({ title: '获取天气数据失败', icon: 'none' })
     }
     wx.stopPullDownRefresh()
@@ -223,6 +244,7 @@ Page({
   },
 
   selectCity(e) {
+    const app = getApp()
     const city = e.currentTarget.dataset.city
     this.setData({ showCityPicker: false, currentCity: city, citySearchKey: '' })
     app.globalData.currentCity = city
@@ -238,6 +260,7 @@ Page({
 
   // ==================== 定位 ====================
   getLocation() {
+    const app = getApp()
     wx.getLocation({
       type: 'wgs84',
       success: (res) => {

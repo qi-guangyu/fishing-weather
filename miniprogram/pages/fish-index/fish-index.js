@@ -2,8 +2,6 @@ const weather = require('../../utils/weather')
 const { fetchWeather } = weather
 const { isLoggedIn } = require('../../utils/auth')
 
-const app = getApp()
-
 Page({
   data: {
     // 城市
@@ -28,13 +26,15 @@ Page({
   },
 
   onLoad() {
-    this.setData({ currentCity: app.globalData.currentCity })
+    const app = getApp()
+    this.setData({ currentCity: app && app.globalData ? app.globalData.currentCity : '常熟' })
     this.loadWeatherData()
     this.setData({ isLoggedIn: isLoggedIn() })
   },
 
   onShow() {
-    if (app.globalData.currentCity !== this.data.currentCity) {
+    const app = getApp()
+    if (app && app.globalData && app.globalData.currentCity !== this.data.currentCity) {
       this.setData({ currentCity: app.globalData.currentCity })
       this.loadWeatherData()
     }
@@ -163,6 +163,7 @@ Page({
   },
 
   selectCity(e) {
+    const app = getApp()
     const city = e.currentTarget.dataset.city
     this.setData({ showCityPicker: false, currentCity: city, citySearchKey: '' })
     app.globalData.currentCity = city
@@ -178,6 +179,7 @@ Page({
 
   // ==================== 定位 ====================
   getLocation() {
+    const app = getApp()
     wx.getLocation({
       type: 'wgs84',
       success: (res) => {

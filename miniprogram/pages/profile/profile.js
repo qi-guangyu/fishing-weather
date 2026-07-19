@@ -1,6 +1,5 @@
 const { isLoggedIn, logout } = require('../../utils/auth')
 const { request } = require('../../utils/request')
-const app = getApp()
 
 Page({
   data: {
@@ -11,6 +10,7 @@ Page({
   },
 
   onShow() {
+    const app = getApp()
     const logged = isLoggedIn()
     this.setData({
       isLoggedIn: logged,

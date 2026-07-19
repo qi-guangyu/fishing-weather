@@ -1,6 +1,5 @@
 const { isLoggedIn } = require('../../utils/auth')
 const { request } = require('../../utils/request')
-const app = getApp()
 
 Page({
   data: {
@@ -67,6 +66,7 @@ Page({
   removeImage() { this.setData({ imagePath: '' }) },
 
   async submit() {
+    const app = getApp()
     if (this.data.submitting) return
     const spotId = this.data.selectedSpotId
     if (!spotId) { wx.showToast({ title: '请选择钓点', icon: 'none' }); return }

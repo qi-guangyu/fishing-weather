@@ -1,5 +1,4 @@
 const { wechatLogin, updateProfile } = require('../../utils/auth')
-const app = getApp()
 
 Page({
   data: {
@@ -41,6 +40,7 @@ Page({
 
   // ---------- 微信登录 ----------
   async handleWechatLogin() {
+    const app = getApp()
     if (this.data.loading) return
     // 未同意隐私协议则先弹窗
     if (!wx.getStorageSync('privacyConsent')) {

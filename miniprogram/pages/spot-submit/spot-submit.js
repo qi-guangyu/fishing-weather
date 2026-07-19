@@ -1,6 +1,5 @@
 const { isLoggedIn } = require('../../utils/auth')
 const { request } = require('../../utils/request')
-const app = getApp()
 
 const WATER_TYPES = [
   { key: 'river', label: '江河' },
@@ -46,6 +45,7 @@ Page({
   },
 
   onLoad() {
+    const app = getApp()
     if (!isLoggedIn()) {
       wx.showModal({
         title: '提示', content: '请先登录后再投稿钓点', showCancel: false,
@@ -99,6 +99,7 @@ Page({
   removeImage() { this.setData({ imagePath: '' }) },
 
   async submit() {
+    const app = getApp()
     if (this.data.submitting) return
     const d = this.data
     if (!d.name.trim()) { wx.showToast({ title: '请填写钓点名称', icon: 'none' }); return }
