@@ -1346,6 +1346,11 @@ app.put('/api/admin/users/:id', authRequired, superAdminRequired, (req, res) => 
   res.json({ success: true });
 });
 
+// ============ 根路由 (云托管探活/健康检查常用 /) ============
+app.get('/', (req, res) => {
+  res.json({ service: '钓鱼天气后端', status: 'ok', time: Date.now() });
+});
+
 // ============ 健康检查 (Render 必需) ============
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime(), timestamp: Date.now() });
@@ -1357,15 +1362,20 @@ function safeJSON(str) {
 }
 
 // ============ 启动 ============
+// 先启动 HTTP 服务：确保路由与健康检查在任何数据库问题下仍可用。
+// 原逻辑把 listen 放在 initDatabase().then 里，一旦建表/seed 抛错整个进程不监听，
+// 导致云托管网关对所有 /api/* 返回 404（线上曾因此出现 404）。
+app.listen(PORT, () => {
+  console.log(`钓鱼天气后端服务已启动: http://localhost:${PORT}`);
+  console.log(`API 基础路径: http://localhost:${PORT}/api/`);
+  console.log(`管理后台: http://localhost:${PORT}/admin/  (需将 web-admin 挂载进容器，详见 DEPLOY.md)`);
+});
+
+// 再异步初始化数据库：失败仅记录日志，不退出进程（服务继续提供路由）
 initDatabase().then(() => {
-  app.listen(PORT, () => {
-    console.log(`钓鱼天气后端服务已启动: http://localhost:${PORT}`);
-    console.log(`API 基础路径: http://localhost:${PORT}/api/`);
-    console.log(`管理后台: http://localhost:${PORT}/admin/  (需将 web-admin 挂载进容器，详见 DEPLOY.md)`);
-  });
+  console.log('[DB] 初始化完成,服务就绪');
 }).catch(err => {
-  console.error('[DB] 数据库初始化失败:', err);
-  process.exit(1);
+  console.error('[DB] 数据库初始化失败(服务仍在运行,部分接口可能受限):', err);
 });
 
 // 优雅退出
