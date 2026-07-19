@@ -55,7 +55,7 @@
         <view class="ft-row" wx:for="{{fishHourly}}" wx:key="index">
           <text class="ft-time">{{item.time}}</text>
           <view class="ft-weather">
-            <image class="ft-icon" src="{{item.icon}}" mode="aspectFit" />
+            <text class="ft-icon">{{item.icon}}</text>
             <text class="ft-desc">{{item.weather}}</text>
           </view>
           <text class="ft-temp">{{item.temperature}}°</text>
