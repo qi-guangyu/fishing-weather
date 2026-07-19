@@ -49,8 +49,16 @@ Page({
     }
     this.setData({ loading: true })
     try {
-      // 1. 静默登录（wx.login → 后端换 openid），不再调用已废弃的 getUserProfile
+      // 1. 静默登录（wx.login → 后端换 openid）
       await wechatLogin()
+
+      // 如果请求后端失败、走的是本地临时模式（fallback），就直接显示错误，不跳转不伪装成功
+      if (app.globalData._authFallback) {
+        const reason = app.globalData._authFallbackReason || '后端服务未连通'
+        app.globalData._authFallback = false
+        app.globalData._authFallbackReason = null
+        throw new Error('微信登录失败: ' + reason)
+      }
 
       // 2. 若用户填写了昵称/头像，补提交到后端
       const { nickname, avatarUrl } = this.data

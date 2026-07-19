@@ -12,6 +12,7 @@ const { request } = require('./request')
  */
 function wechatLogin() {
   return new Promise((resolve, reject) => {
+    const app = getApp()
     wx.login({
       success(loginRes) {
         if (!loginRes.code) {
@@ -27,13 +28,15 @@ function wechatLogin() {
           // 保存登录状态
           wx.setStorageSync('token', data.access_token || data.token)
           wx.setStorageSync('userInfo', data.user || data)
-          const app = getApp()
           app.globalData.token = data.access_token || data.token
           app.globalData.userInfo = data.user || data
+          app.globalData._authFallback = false
           resolve(data.user || data)
         }).catch(err => {
           // 后端不可用时，使用本地临时登录
           console.warn('[auth] 后端登录失败，使用临时模式:', err)
+          app.globalData._authFallback = true
+          app.globalData._authFallbackReason = (err && (err.message || err.errMsg || JSON.stringify(err))) || '后端无响应'
           const tempUser = {
             id: 'local_' + Date.now(),
             username: '微信用户',
