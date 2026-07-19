@@ -17,8 +17,9 @@ COPY . .
 #    否则容器重启 / 扩缩容会丢失数据库(fishing.db)与上传的图片。
 RUN mkdir -p /app/data/uploads
 
-# 端口：云托管平台会注入 PORT 环境变量；本地运行时默认 3456。
-ENV PORT=3456
+# 端口：云托管平台默认也会注入 PORT 环境变量，本地运行时默认 3456。
+# 不要在 Dockerfile 里写死 PORT，否则云托管注入的变量被覆盖，端口不匹配网关会返回 404。
+# server.js 已写 `process.env.PORT || 3456`，本地跑时回落 3456，云托管用平台注入的端口。
 ENV NODE_ENV=production
 
 # 安全建议：通过云托管「环境变量」配置 JWT_SECRET 为随机串，避免硬编码默认值。
