@@ -1346,9 +1346,16 @@ app.put('/api/admin/users/:id', authRequired, superAdminRequired, (req, res) => 
   res.json({ success: true });
 });
 
+// ============ 版本探针 (用于确认线上跑的是哪份代码) ============
+// 每次重新部署都改这个值,小程序 Network 里请求 /api/version 即可确认线上版本
+const BUILD_VERSION = 'deb56b9-031';
+app.get('/api/version', (req, res) => {
+  res.json({ service: '钓鱼天气后端', version: BUILD_VERSION, time: Date.now() });
+});
+
 // ============ 根路由 (云托管探活/健康检查常用 /) ============
 app.get('/', (req, res) => {
-  res.json({ service: '钓鱼天气后端', status: 'ok', time: Date.now() });
+  res.json({ service: '钓鱼天气后端', status: 'ok', version: BUILD_VERSION, time: Date.now() });
 });
 
 // ============ 健康检查 (Render 必需) ============
