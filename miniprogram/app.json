@@ -12,6 +12,7 @@
     "pages/spot-submit/spot-submit",
     "pages/privacy/privacy"
   ],
+  "lazyCodeLoading": "requiredComponents",
   "window": {
     "navigationBarBackgroundColor": "#0f172a",
     "navigationBarTextStyle": "white",
