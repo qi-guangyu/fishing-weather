@@ -403,6 +403,26 @@ async function initDatabase() {
 }
 
 // ============ 图片上传 ============
+
+// 将 base64 图片写入 UPLOAD_DIR，返回 '/uploads/xxx.ext'。
+// callContainer 模式下前端 wx.uploadFile 直连被网关拦截，故前端改为
+// 读文件为 base64 经私有协议上报，后端在此解码落盘（与头像接口逻辑一致）。
+function saveBase64Image(base64, prefix) {
+  if (!base64) return null
+  try {
+    const raw = String(base64)
+    const m = raw.match(/^data:(image\/\w+);base64,(.+)$/)
+    if (!m) return null
+    const ext = (m[1].split('/')[1] || 'png')
+    const fname = prefix + '_' + uuidv4() + '.' + ext
+    fs.writeFileSync(path.join(UPLOAD_DIR, fname), Buffer.from(m[2], 'base64'))
+    return '/uploads/' + fname
+  } catch (e) {
+    console.warn('[image] base64 解析失败:', e.message)
+    return null
+  }
+}
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => {
@@ -831,6 +851,29 @@ app.get('/api/spots/:id', (req, res) => {
   res.json({ data: spot });
 });
 
+// ---------- 图片代理（callContainer 模式取图） ----------
+// 小程序 <image> 与 wx.uploadFile 在 callContainer 私有协议下无法直连后端域名，
+// 故 UGC 图片统一经此私有协议接口取回字节（返回 data URI），前端落本地临时文件后显示。
+app.get('/api/file', (req, res) => {
+  const p = req.query.path
+  if (!p) return res.status(400).json({ error: '缺少 path' })
+  const normalized = String(p).replace(/\\/g, '/')
+  // 仅允许 /uploads/ 下的文件，防目录穿越
+  if (!normalized.startsWith('/uploads/') || normalized.indexOf('..') >= 0) {
+    return res.status(403).json({ error: '无权访问该文件' })
+  }
+  const filePath = path.join(UPLOAD_DIR, path.basename(normalized))
+  fs.readFile(filePath, (err, buf) => {
+    if (err) return res.status(404).json({ error: '文件不存在' })
+    const ext = (path.extname(filePath) || '.jpg').slice(1).toLowerCase()
+    const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
+      : ext === 'png' ? 'image/png'
+      : ext === 'webp' ? 'image/webp'
+      : ext === 'gif' ? 'image/gif' : 'application/octet-stream'
+    res.json({ data: 'data:' + mime + ';base64,' + buf.toString('base64') })
+  })
+});
+
 // ---------- 收藏 ----------
 app.post('/api/spots/:id/favorite', authRequired, (req, res) => {
   const spotId = req.params.id;
@@ -875,9 +918,10 @@ app.post('/api/spots/:id/catches', authRequired, upload.single('image'), (req, r
   const spot = dbWrap.prepare('SELECT id FROM fishing_spots WHERE id = ?').get(spotId);
   if (!spot) return res.status(404).json({ error: '钓点不存在' });
 
-  const { weight, feeling } = req.body;
+  const { weight, feeling, imageBase64 } = req.body;
   const id = uuidv4();
-  const imagePath = req.file ? '/uploads/' + req.file.filename : null;
+  const imagePath = req.file ? '/uploads/' + req.file.filename
+    : (imageBase64 ? saveBase64Image(imageBase64, 'catch') : null);
 
   dbWrap.prepare('INSERT INTO catches (id, user_id, spot_id, image, weight, feeling, status) VALUES (?,?,?,?,?,?,"approved")')
     .run(id, req.user.id, spotId, imagePath, parseFloat(weight) || 0, filterSensitive(feeling || ''));
@@ -906,11 +950,12 @@ app.post('/api/spots/:id/comments', authRequired, upload.single('image'), (req, 
   const spot = dbWrap.prepare('SELECT id FROM fishing_spots WHERE id = ? AND status = "published"').get(spotId);
   if (!spot) return res.status(404).json({ error: '钓点不存在' });
 
-  const { content } = req.body;
+  const { content, imageBase64 } = req.body;
   if (!content || !content.trim()) return res.status(400).json({ error: '评论内容不能为空' });
 
   const id = uuidv4();
-  const imagePath = req.file ? '/uploads/' + req.file.filename : null;
+  const imagePath = req.file ? '/uploads/' + req.file.filename
+    : (imageBase64 ? saveBase64Image(imageBase64, 'comment') : null);
 
   dbWrap.prepare('INSERT INTO comments (id, user_id, spot_id, content, image, status) VALUES (?,?,?,?,?,"approved")')
     .run(id, req.user.id, spotId, filterSensitive(content.trim()), imagePath);
@@ -955,7 +1000,18 @@ app.post('/api/spots/submit', authRequired, upload.array('images', 10), async (r
 
     if (!name || !latitude || !longitude) return res.status(400).json({ error: '钓点名称、经纬度为必填项' });
 
-    const images = req.files ? JSON.stringify(req.files.map(f => '/uploads/' + f.filename)) : '[]';
+    // 兼容两种上传方式：
+    //  - 直连模式：multipart/form-data，file 字段名 images
+    //  - callContainer 模式：JSON { imagesBase64: [dataURI,...] }，前端经私有协议上报
+    let images
+    if (req.files && req.files.length) {
+      images = JSON.stringify(req.files.map(f => '/uploads/' + f.filename))
+    } else if (req.body && req.body.imagesBase64) {
+      const arr = Array.isArray(req.body.imagesBase64) ? req.body.imagesBase64 : [req.body.imagesBase64]
+      images = JSON.stringify(arr.map(b => saveBase64Image(b, 'spot')).filter(Boolean))
+    } else {
+      images = '[]'
+    }
     const id = uuidv4();
 
     dbWrap.prepare(`INSERT INTO fishing_spots (id, name, province_id, city_id, district_id, province, city, district,

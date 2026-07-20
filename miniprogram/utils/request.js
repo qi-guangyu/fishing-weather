@@ -112,7 +112,8 @@ function handleResponse(res, app, resolve, reject) {
     app.globalData.userInfo = null
     reject({ code: 401, message: '登录已过期，请重新登录' })
   } else {
-    reject({ code: res.statusCode, message: (res.data && res.data.message) || '请求失败' })
+    // 后端统一用 { error } 返回错误；部分旧接口用 { message }，二者兼容
+    reject({ code: res.statusCode, message: (res.data && (res.data.error || res.data.message)) || '请求失败' })
   }
 }
 

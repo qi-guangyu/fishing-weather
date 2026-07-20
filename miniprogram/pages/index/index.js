@@ -20,6 +20,7 @@ Page({
     hourlyList: [],
     // 15天预报
     forecast15: [],
+    activeForecastIndex: 1,
     // AI建议
     aiAdvice: null,
     // 状态
@@ -202,7 +203,7 @@ Page({
         comfortText: comfort.text,
         comfortColor: comfort.color,
         comfortBg: comfort.bg,
-        isActive: i === 1
+        isActive: i === this.data.activeForecastIndex
       }
     })
 
@@ -224,6 +225,14 @@ Page({
   },
 
   // 钓鱼指数模块（钓法/鱼种/日期切换 + 24h鱼情表）已迁移至 pages/fish-index
+
+  // ==================== 15天预报日期选点 ====================
+  selectForecastDay(e) {
+    const idx = e.currentTarget.dataset.idx
+    if (idx == null || idx === this.data.activeForecastIndex) return
+    const forecast15 = this.data.forecast15.map((d, i) => ({ ...d, isActive: i === idx }))
+    this.setData({ activeForecastIndex: idx, forecast15 })
+  },
 
   // ==================== 城市选择（优化：分组 + 拼音搜索 + 最近选择） ====================
   showCityPicker() {

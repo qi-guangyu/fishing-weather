@@ -40,13 +40,6 @@ function parseImages(imgs) {
   try { const a = JSON.parse(imgs); return Array.isArray(a) ? a : [] } catch (e) { return [] }
 }
 
-function fullUrl(p) {
-  if (!p) return ''
-  if (p.startsWith('http')) return p
-  const base = getApp().globalData.apiBase || ''
-  return base + p
-}
-
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371
   const dLat = (lat2 - lat1) * Math.PI / 180
@@ -171,7 +164,7 @@ Page({
       const res = await request({ url: '/api/spots', data: params })
       const list = (res.data || []).map(s => {
         const imgs = parseImages(s.images)
-        const cover = imgs[0] ? fullUrl(imgs[0]) : ''
+        const cover = imgs[0] || ''
         let distText = ''
         if (userLat != null && userLon != null && s.latitude && s.longitude) {
           const d = haversine(userLat, userLon, s.latitude, s.longitude)
@@ -190,7 +183,7 @@ Page({
           catches_count: s.catches_count || 0,
           comments_count: s.comments_count || 0,
           cover,
-          images: imgs.map(fullUrl),
+          images: imgs,
           distText,
           levelKey: lv.key,
           levelLabel: lv.label,
@@ -287,18 +280,18 @@ Page({
   // ---------- 定位 ----------
   getLocation() {
     wx.getLocation({
-      type: 'gcj02',
+      type: 'wgs84',
       success: (res) => {
         wx.setStorageSync('userLat', res.latitude)
         wx.setStorageSync('userLon', res.longitude)
         const cities = Object.entries(weather.cityCoords)
-        let nearest = cities[0]
+        let nearest = cities[0][0]
         let minDist = Infinity
         for (const [name, coord] of cities) {
-          const dist = Math.pow(coord.lat - res.latitude, 2) + Math.pow(coord.lon - res.longitude, 2)
-          if (dist < minDist) { minDist = dist; nearest = [name, coord] }
+          const dist = haversine(res.latitude, res.longitude, coord.lat, coord.lon)
+          if (dist < minDist) { minDist = dist; nearest = name }
         }
-        const city = nearest[0]
+        const city = nearest
         const app = getApp()
         app.globalData.currentCity = city
         wx.setStorageSync('currentCity', city)
@@ -306,9 +299,10 @@ Page({
           this.loadWeather()
           this.loadSpots(true)
         })
-        wx.showToast({ title: '已定位到' + city, icon: 'success' })
+        const tip = minDist > 80 ? ('已定位到 ' + city + '（最近城市）') : ('已定位到 ' + city)
+        wx.showToast({ title: tip, icon: 'success' })
       },
-      fail: () => wx.showToast({ title: '定位失败', icon: 'none' })
+      fail: () => wx.showToast({ title: '定位失败，请手动选择城市', icon: 'none' })
     })
   },
 

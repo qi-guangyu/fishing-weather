@@ -65,15 +65,13 @@ Page({
   },
 
   normalize(it) {
-    const app = getApp()
-    const base = (app && app.globalData && app.globalData.apiBase) || 'http://localhost:3456'
     const date = toDate(it.created_at)
     if (this.data.type === 'favorites') {
       const imgs = Array.isArray(it.images) ? it.images : []
       const lv = indexLevel(it.fishing_index)
       return {
         id: it.id, spotId: it.spot_id, statusText: '',
-        cover: imgs[0] ? base + imgs[0] : '',
+        cover: imgs[0] || '',
         name: it.spot_name, addr: it.address,
         tags: [WATER_MAP[it.water_type] || it.water_type, FEE_MAP[it.fee_type] || it.fee_type].filter(Boolean),
         indexLevel: lv.text, indexClass: lv.cls, date
@@ -83,8 +81,8 @@ Page({
       const imgs = Array.isArray(it.images) ? it.images : []
       const st = STATUS_MAP[it.status] || ['未知', '']
       return {
-        id: it.id, statusText: st[0],
-        cover: imgs[0] ? base + imgs[0] : '',
+        id: it.id, spotId: it.id, statusText: st[0],
+        cover: imgs[0] || '',
         name: it.name, addr: it.address,
         tags: [WATER_MAP[it.water_type] || it.water_type, FEE_MAP[it.fee_type] || it.fee_type].filter(Boolean),
         statusClass: st[1], date
@@ -92,15 +90,15 @@ Page({
     }
     if (this.data.type === 'catches') {
       return {
-        id: it.id,
-        img: it.image ? base + it.image : '',
+        id: it.id, spotId: it.spot_id,
+        img: it.image || '',
         spot: it.spot_name, weight: it.weight, feeling: it.feeling, date
       }
     }
     // comments
     return {
-      id: it.id,
-      img: it.image ? base + it.image : '',
+      id: it.id, spotId: it.spot_id,
+      img: it.image || '',
       spot: it.spot_name, content: it.content, date
     }
   },
@@ -114,6 +112,11 @@ Page({
 
   goSpot(e) {
     const ds = e.currentTarget.dataset
+    // 我的投稿属于本人，即使待审核/已拒绝也应允许查看详情
+    if (this.data.type === 'submissions') {
+      if (ds.id) wx.navigateTo({ url: '/pages/spot-detail/spot-detail?id=' + ds.id })
+      return
+    }
     if (ds.status && ds.status !== '已发布') {
       wx.showToast({ title: ds.status + '，暂不可查看', icon: 'none' })
       return

@@ -3,7 +3,7 @@
   <view class="profile-header">
     <block wx:if="{{isLoggedIn}}">
       <view class="avatar">{{userInfo.avatar ? '' : '🎣'}}</view>
-      <image wx:if="{{userInfo.avatar}}" class="avatar-img" src="{{userInfo.avatar}}" mode="aspectFill" />
+      <ugc-image wx:if="{{userInfo.avatar}}" src="{{userInfo.avatar}}" mode="aspectFill" img-class="avatar-img" />
       <view class="username">{{userInfo.username || '钓鱼爱好者'}}</view>
       <view class="user-sub">当前城市：{{currentCity}}</view>
     </block>

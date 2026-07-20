@@ -1,0 +1,1 @@
+/* ugc-image 组件：根节点即 <image>，样式由外部 imgClass 控制，此处无需额外样式 */

@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "钓点详情",
-  "enablePullDownRefresh": false
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "ugc-image": "../../components/ugc-image/ugc-image"
+  }
 }

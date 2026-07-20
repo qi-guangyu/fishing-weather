@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "钓点推荐"
+  "navigationBarTitleText": "钓点推荐",
+  "usingComponents": {
+    "ugc-image": "../../components/ugc-image/ugc-image"
+  }
 }

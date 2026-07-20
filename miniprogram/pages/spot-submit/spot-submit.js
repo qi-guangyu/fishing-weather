@@ -131,24 +131,13 @@ Page({
     const fail = (m) => { this.setData({ submitting: false }); wx.showToast({ title: m, icon: 'none' }) }
 
     try {
+      // callContainer 模式下 wx.uploadFile 直连被网关拦截，故改为读文件为 base64
+      // 经 request() 走私有协议上报（与头像上传一致）。无图则直接 JSON 提交。
       if (d.imagePath) {
-        await new Promise((resolve, reject) => {
-          wx.uploadFile({
-            url: app.globalData.apiBase + '/api/spots/submit',
-            filePath: d.imagePath,
-            name: 'images',
-            formData: fields,
-            header: { 'Authorization': token ? 'Bearer ' + token : '' },
-            success: (res) => {
-              if (res.statusCode >= 200 && res.statusCode < 300) resolve()
-              else { try { reject((JSON.parse(res.data).error) || '投稿失败') } catch (e) { reject('投稿失败') } }
-            },
-            fail: (err) => reject(err.errMsg || '上传失败')
-          })
-        })
-      } else {
-        await request({ url: '/api/spots/submit', method: 'POST', data: fields })
+        const imageBase64 = await this.fileToBase64(d.imagePath)
+        if (imageBase64) fields.imagesBase64 = [imageBase64]
       }
+      await request({ url: '/api/spots/submit', method: 'POST', data: fields })
       this.setData({ submitting: false })
       wx.showToast({ title: '投稿成功，待审核', icon: 'success' })
       setTimeout(() => {
@@ -160,5 +149,21 @@ Page({
     } catch (e) {
       fail(typeof e === 'string' ? e : (e.message || '投稿失败'))
     }
+  },
+
+  // 将本地临时图片读为 base64 data URI（callContainer 下经私有协议上报）
+  fileToBase64(filePath) {
+    return new Promise((resolve, reject) => {
+      const ext = (filePath.match(/\.(\w+)(?:\?.*)?$/) || [, 'png'])[1].toLowerCase()
+      const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
+        : ext === 'webp' ? 'image/webp'
+        : ext === 'gif' ? 'image/gif' : 'image/png'
+      wx.getFileSystemManager().readFile({
+        filePath,
+        encoding: 'base64',
+        success: (r) => resolve('data:' + mime + ';base64,' + r.data),
+        fail: () => reject(new Error('图片读取失败'))
+      })
+    })
   }
 })

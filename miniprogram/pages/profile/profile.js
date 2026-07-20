@@ -74,10 +74,21 @@ Page({
   clearCache() {
     wx.showModal({
       title: '清除缓存',
-      content: '将清除所有本地天气数据和设置',
+      content: '将清除本地天气数据和设置（不会退出登录）',
       success: (res) => {
         if (res.confirm) {
+          const app = getApp()
+          // 仅清业务缓存，保留登录态(token/userInfo)与隐私授权(privacyConsent)
+          const keep = {
+            token: wx.getStorageSync('token'),
+            userInfo: wx.getStorageSync('userInfo'),
+            privacyConsent: wx.getStorageSync('privacyConsent')
+          }
           wx.clearStorageSync()
+          if (keep.token) wx.setStorageSync('token', keep.token)
+          if (keep.userInfo) wx.setStorageSync('userInfo', keep.userInfo)
+          if (keep.privacyConsent) wx.setStorageSync('privacyConsent', keep.privacyConsent)
+          if (app && app.globalData) app.globalData.currentCity = '常熟'
           wx.showToast({ title: '清除成功', icon: 'success' })
           setTimeout(() => { wx.reLaunch({ url: '/pages/index/index' }) }, 1000)
         }

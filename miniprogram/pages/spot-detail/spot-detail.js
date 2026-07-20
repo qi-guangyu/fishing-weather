@@ -1,4 +1,5 @@
 const { request } = require('../../utils/request')
+const { resolveImage } = require('../../utils/image')
 
 const WATER_LABEL = { river: '江河', reservoir: '水库', lake: '湖泊', pond: '池塘', stream: '溪流' }
 const FEE_LABEL = { free: '免费', daily: '按天收费', weight: '按斤收费', other: '其他收费' }
@@ -18,9 +19,7 @@ function parseImages(imgs) {
 }
 
 function fullUrl(p) {
-  if (!p) return ''
-  if (p.startsWith('http')) return p
-  return (getApp().globalData.apiBase || '') + p
+  return p || ''
 }
 
 Page({
@@ -57,7 +56,7 @@ Page({
       wx.setNavigationBarTitle({ title: s.name || '钓点详情' })
       this.setData({
         spot: s,
-        images: imgs.map(fullUrl),
+        images: imgs,
         weatherData: s.weather_data || null,
         loading: false,
         favorited: !!s.favorited,
@@ -83,7 +82,7 @@ Page({
           id: c.id,
           nickname: c.nickname || c.username || '钓友',
           content: c.content,
-          image: c.image ? fullUrl(c.image) : '',
+          image: c.image || '',
           created_at: c.created_at
         }))
       })
@@ -96,7 +95,7 @@ Page({
       this.setData({
         catches: (r.data || []).map(c => ({
           id: c.id,
-          image: c.image ? fullUrl(c.image) : '',
+          image: c.image || '',
           weight: c.weight || 0,
           feeling: c.feeling || ''
         }))
@@ -171,9 +170,25 @@ Page({
     }
   },
 
-  previewImg(e) {
-    const url = e.currentTarget.dataset.url
-    if (!url) return
-    wx.previewImage({ current: url, urls: this.data.images.length ? this.data.images : [url] })
+  async previewImg(e) {
+    // 点击来源可能是 swiper 大图（ugc-image 透传已解析本地地址）或评论/渔获单图（传相对路径）
+    const tappedResolved = (e.detail && e.detail.src) || ''
+    const tappedRef = e.currentTarget && e.currentTarget.dataset ? (e.currentTarget.dataset.url || '') : ''
+    try {
+      const urls = await Promise.all(this.data.images.map(resolveImage))
+      const resolved = urls.filter(Boolean)
+      // 1) 点的是钓点大图：在图集中定位并预览
+      if (tappedResolved && resolved.indexOf(tappedResolved) >= 0) {
+        wx.previewImage({ current: tappedResolved, urls: resolved })
+        return
+      }
+      // 2) 点的是评论/渔获单图：单独解析并预览该图
+      if (tappedRef) {
+        const r = await resolveImage(tappedRef)
+        if (r) { wx.previewImage({ current: r, urls: [r] }); return }
+      }
+      // 3) 兜底：预览钓点图集
+      if (resolved.length) wx.previewImage({ current: resolved[0], urls: resolved })
+    } catch (err) { /* 忽略 */ }
   }
 })

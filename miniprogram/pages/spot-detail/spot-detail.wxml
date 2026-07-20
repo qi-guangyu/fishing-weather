@@ -4,7 +4,7 @@
   <!-- 图片轮播 -->
   <swiper wx:if="{{images.length}}" class="d-swiper" indicator-dots circular indicator-active-color="#22d3ee">
     <swiper-item wx:for="{{images}}" wx:key="*this">
-      <image src="{{item}}" mode="aspectFill" class="d-swiper-img" bindtap="previewImg" data-url="{{item}}" />
+      <ugc-image src="{{item}}" mode="aspectFill" img-class="d-swiper-img" bindtap="previewImg" data-url="{{item}}" />
     </swiper-item>
   </swiper>
   <view wx:else class="d-swiper d-swiper-ph"><text>🎣</text></view>
@@ -65,7 +65,7 @@
     </view>
     <view class="comment-list">
       <view class="comment-item" wx:for="{{comments}}" wx:key="id">
-        <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="ci-img" bindtap="previewImg" data-url="{{item.image}}" />
+        <ugc-image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" img-class="ci-img" bindtap="previewImg" data-url="{{item.image}}" />
         <view class="ci-body">
           <view class="ci-name">{{item.nickname}}</view>
           <view class="ci-content">{{item.content}}</view>
@@ -80,7 +80,7 @@
     <view class="section-title"><view class="st-bar"></view>渔获秀 ({{catches.length}})</view>
     <view class="catch-grid">
       <view class="catch-item" wx:for="{{catches}}" wx:key="id" bindtap="previewImg" data-url="{{item.image}}">
-        <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="catch-img" />
+        <ugc-image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" img-class="catch-img" />
         <view class="catch-w" wx:if="{{item.weight}}">{{item.weight}}kg</view>
       </view>
     </view>

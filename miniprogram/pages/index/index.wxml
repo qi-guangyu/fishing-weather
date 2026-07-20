@@ -94,7 +94,7 @@
     <view class="section-title"><text>📅</text> 15天预报</view>
     <scroll-view scroll-x class="forecast-scroll" enhanced show-scrollbar="{{false}}">
       <view class="forecast-track">
-        <view class="day-card {{item.isActive ? 'day-active' : ''}}" wx:for="{{forecast15}}" wx:key="index">
+        <view class="day-card {{item.isActive ? 'day-active' : ''}}" wx:for="{{forecast15}}" wx:key="index" data-idx="{{index}}" bindtap="selectForecastDay">
           <view class="day-date">
             <text class="dd-week">{{item.dayLabel}}</text>
             <text class="dd-day">{{item.dateStr}}</text>

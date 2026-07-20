@@ -103,7 +103,7 @@
   <!-- 钓点卡片 -->
   <view class="spot-card animate-in" style="animation-delay:{{index * 0.04}}s" wx:for="{{spots}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
     <view class="sc-cover">
-      <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" class="sc-cover-img" />
+      <ugc-image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" img-class="sc-cover-img" />
       <view wx:else class="sc-cover-ph">{{item.waterLabel}}</view>
       <view class="lv-badge tag-{{item.levelKey}}">{{item.levelLabel}}</view>
     </view>

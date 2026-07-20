@@ -75,7 +75,7 @@
 
   <view style="height:40rpx"></view>
 
-  <!-- 城市选择弹窗 -->
+  <!-- 城市选择弹窗（与首页一致：搜索 + 快捷 + 按省分组） -->
   <view class="modal-overlay" wx:if="{{showCityPicker}}" bindtap="hideCityPicker">
     <view class="modal-panel animate-in" catchtap="noop">
       <view class="modal-header">
@@ -83,13 +83,41 @@
         <view class="modal-close" bindtap="hideCityPicker">✕</view>
       </view>
       <view class="modal-body">
-        <input class="city-search-input" placeholder="搜索城市名称..." value="{{citySearchKey}}" bindinput="onCitySearch" always-embed adjust-position="{{true}}" catchtap="noop" />
+        <input class="city-search-input" placeholder="搜索城市 / 拼音（如 cs、shanghai）" value="{{citySearchKey}}" bindinput="onCitySearch" confirm-type="search" always-embed adjust-position="{{true}}" catchtap="noop" />
+
         <scroll-view scroll-y class="city-results">
-          <view class="city-result-item {{item.name === currentCityName ? 'current' : ''}}" wx:for="{{cityList}}" wx:key="name" data-city="{{item.name}}" bindtap="selectCity">
-            <text class="city-name">{{item.name}}</text>
-            <text class="city-province" wx:if="{{item.name === currentCityName}}">· 使用中</text>
-            <text class="city-province" wx:else>{{item.province}}</text>
-          </view>
+          <!-- 浏览态：快捷 + 分组 -->
+          <block wx:if="{{!searching}}">
+            <!-- 快捷选择：当前城市 + 最近选择 -->
+            <view class="city-quick" wx:if="{{currentCityName || recentCities.length}}">
+              <view class="city-quick-label">快捷选择</view>
+              <view class="city-chips">
+                <view class="city-chip current" wx:if="{{currentCityName}}" data-city="{{currentCityName}}" bindtap="selectCity">
+                  {{currentCityName}}<text class="chip-tag">当前</text>
+                </view>
+                <view class="city-chip" wx:for="{{recentCities}}" wx:key="*this" data-city="{{item}}" bindtap="selectCity">{{item}}</view>
+              </view>
+            </view>
+
+            <!-- 按省份分组 -->
+            <view class="city-group" wx:for="{{cityGroups}}" wx:key="province" wx:for-item="group">
+              <view class="city-group-title">{{group.province}}</view>
+              <view class="city-result-item {{c.name === currentCityName ? 'current' : ''}}" wx:for="{{group.cities}}" wx:key="name" wx:for-item="c" data-city="{{c.name}}" bindtap="selectCity">
+                <text class="city-name">{{c.name}}</text>
+                <text class="city-province" wx:if="{{c.name === currentCityName}}">· 使用中</text>
+              </view>
+            </view>
+          </block>
+
+          <!-- 搜索态：扁平结果 -->
+          <block wx:else>
+            <view class="city-empty" wx:if="{{searchResults.length === 0}}">未找到匹配的城市，换个关键词试试</view>
+            <view class="city-result-item {{item.name === currentCityName ? 'current' : ''}}" wx:for="{{searchResults}}" wx:key="name" data-city="{{item.name}}" bindtap="selectCity">
+              <text class="city-name">{{item.name}}</text>
+              <text class="city-province" wx:if="{{item.name === currentCityName}}">· 使用中</text>
+              <text class="city-province" wx:else>{{item.province}}</text>
+            </view>
+          </block>
         </scroll-view>
       </view>
     </view>

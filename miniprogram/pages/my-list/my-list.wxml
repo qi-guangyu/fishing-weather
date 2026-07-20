@@ -15,7 +15,7 @@
   <block wx:if="{{type === 'favorites' || type === 'submissions'}}">
     <view class="spot-card card animate-in" style="animation-delay:{{index * 0.05}}s" wx:for="{{list}}" wx:key="id"
           bindtap="goSpot" data-id="{{item.spotId || item.id}}" data-status="{{item.statusText}}">
-      <image wx:if="{{item.cover}}" class="sc-cover" src="{{item.cover}}" mode="aspectFill" />
+      <ugc-image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" img-class="sc-cover" />
       <view wx:else class="sc-cover sc-cover-ph">📍</view>
       <view class="sc-body">
         <view class="sc-title">{{item.name}}</view>
@@ -33,7 +33,7 @@
   <!-- 我的渔获 -->
   <block wx:elif="{{type === 'catches'}}">
     <view class="item-card card animate-in" style="animation-delay:{{index * 0.05}}s" wx:for="{{list}}" wx:key="id">
-      <image wx:if="{{item.img}}" class="ic-img" src="{{item.img}}" mode="aspectFill" />
+      <ugc-image wx:if="{{item.img}}" src="{{item.img}}" mode="aspectFill" img-class="ic-img" />
       <view wx:else class="ic-img ic-img-ph">🐟</view>
       <view class="ic-body">
         <view class="ic-top">
@@ -49,7 +49,7 @@
   <!-- 我的评论 -->
   <block wx:else>
     <view class="item-card card animate-in" style="animation-delay:{{index * 0.05}}s" wx:for="{{list}}" wx:key="id">
-      <image wx:if="{{item.img}}" class="ic-img" src="{{item.img}}" mode="aspectFill" />
+      <ugc-image wx:if="{{item.img}}" src="{{item.img}}" mode="aspectFill" img-class="ic-img" />
       <view wx:else class="ic-img ic-img-ph">💬</view>
       <view class="ic-body">
         <view class="ic-top">
