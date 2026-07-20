@@ -242,6 +242,9 @@ Page({
     this.setData({ showCityPicker: false, citySearchKey: '', searching: false })
   },
 
+  // 仅用于阻止弹窗内部点击冒泡到遮罩（避免点击搜索框/列表误触发关闭）
+  noop() {},
+
   onCitySearch(e) {
     const key = e.detail.value
     if (!key || !key.trim()) {
