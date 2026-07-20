@@ -171,9 +171,10 @@
           <!-- 搜索态：扁平结果 -->
           <block wx:else>
             <view class="city-empty" wx:if="{{searchResults.length === 0}}">未找到匹配的城市，换个关键词试试</view>
-            <view class="city-result-item" wx:for="{{searchResults}}" wx:key="name" data-city="{{item.name}}" bindtap="selectCity">
+            <view class="city-result-item {{item.name === currentCityName ? 'current' : ''}}" wx:for="{{searchResults}}" wx:key="name" data-city="{{item.name}}" bindtap="selectCity">
               <text class="city-name">{{item.name}}</text>
-              <text class="city-province">{{item.province}}</text>
+              <text class="city-province" wx:if="{{item.name === currentCityName}}">· 使用中</text>
+              <text class="city-province" wx:else>{{item.province}}</text>
             </view>
           </block>
         </scroll-view>

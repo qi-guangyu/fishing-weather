@@ -258,14 +258,27 @@ Page({
   selectCity(e) {
     const app = getApp()
     const city = e.currentTarget.dataset.city
+    if (!city) return
+    // 已是当前城市：仅提示，不刷新、不改变搜索框状态
+    if (city === this.data.currentCity) {
+      wx.showToast({ title: '当前已在 ' + city, icon: 'none' })
+      return
+    }
     // 写入最近选择（去重、置顶、最多 6 个）
     let recent = wx.getStorageSync('recent_cities') || []
     recent = [city, ...recent.filter(c => c !== city)].slice(0, 6)
     wx.setStorageSync('recent_cities', recent)
-    this.setData({ showCityPicker: false, currentCity: city, citySearchKey: '', searching: false })
+    // 关键修复：选择城市后【不关闭弹窗、不清空搜索框、不改变 searching 状态】，
+    // 搜索框内容与状态完全保持不变，仅后台切换城市并刷新天气。
+    this.setData({
+      currentCity: city,
+      currentCityName: city,
+      recentCities: recent.filter(c => c !== city)
+    })
     app.globalData.currentCity = city
     wx.setStorageSync('currentCity', city)
     this.loadWeatherData(true)
+    wx.showToast({ title: '已切换到 ' + city, icon: 'success' })
   },
 
   // ==================== 刷新 ====================

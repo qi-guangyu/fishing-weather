@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鱼种图标版本对比画廊</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #0a1929 0%, #0d2138 50%, #0a1626 100%);
+    color: #e6f3fb; padding: 28px 18px 60px; min-height: 100vh;
+  }
+  h1 { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 6px; color: #7dd3fc; }
+  .sub { text-align: center; font-size: 13px; color: #8fb3cc; margin-bottom: 26px; }
+  .ver { background: rgba(255,255,255,0.04); border: 1px solid rgba(125,211,252,0.18);
+    border-radius: 14px; padding: 16px 16px 18px; margin-bottom: 18px; }
+  .ver-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .ver-name { font-size: 16px; font-weight: 700; color: #22d3ee; }
+  .ver-commit { font-size: 11px; color: #6b8aa3; font-family: monospace;
+    background: rgba(255,255,255,0.06); padding: 2px 7px; border-radius: 6px; }
+  .ver-desc { font-size: 12px; color: #9fc0d8; }
+  .ver-flag { font-size: 10px; color: #0a1626; background: #34d399; padding: 2px 8px;
+    border-radius: 999px; font-weight: 700; }
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  @media (max-width: 720px){ .grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 460px){ .grid { grid-template-columns: repeat(3, 1fr); } }
+  .cell { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 8px 4px 6px;
+    text-align: center; }
+  .cell img { width: 56px; height: 56px; object-fit: contain; display: block; margin: 0 auto 4px; }
+  .cell .emo { font-size: 34px; line-height: 56px; display: block; margin: 0 auto 4px; }
+  .cell .nm { font-size: 11px; color: #bcd6e8; }
+  .note { font-size: 12px; color: #8fb3cc; margin-top: 14px; line-height: 1.7;
+    background: rgba(255,255,255,0.03); border-left: 3px solid #22d3ee; padding: 10px 14px; border-radius: 8px; }
+</style>
+</head>
+<body>
+  <h1>🐟 鱼种图标版本对比画廊</h1>
+  <div class="sub">共 7 套方案（6 个 git 历史版本 + 当前工作区 ImageGen 版）· 点击你想恢复的版本，告诉我编号即可</div>
+  <div id="root"></div>
+
+<script>
+const fish = [
+  ['jiyu','鲫鱼'],['liyu','鲤鱼'],['caoyu','草鱼'],['qingyu','青鱼'],
+  ['qiaozui','翘嘴'],['luyu','鲈鱼'],['guiyu','鳜鱼'],['heiyu','黑鱼'],
+  ['daiyu','带鱼'],['diaoyu','鲷鱼'],['luyu2','海鲈'],['bayu','鲅鱼']
+];
+const emojiMap = {
+  jiyu:'🐟',liyu:'🐠',caoyu:'🐡',qingyu:'🦈',
+  qiaozui:'🐟',luyu:'🐠',guiyu:'🐡',heiyu:'🦈',
+  daiyu:'🐟',diaoyu:'🐠',luyu2:'🐡',bayu:'🦈'
+};
+const versions = [
+  { id:'v1_63fc031_realistic', commit:'63fc031', label:'写实风格位图', desc:'最早的写实风位图，真实鱼照片质感' },
+  { id:'v2_d3fd983_flatvec', commit:'d3fd983', label:'扁平矢量风', desc:'重新生成 12 个扁平矢量 PNG（128×128）' },
+  { id:'v3_98665f6_cyanedge', commit:'98665f6', label:'青蓝亮边+提亮', desc:'加青蓝亮边并提亮暗色鱼身' },
+  { id:'v4_3ace43c_lightbg', commit:'3ace43c', label:'浅色圆底+提亮 70% 白', desc:'加浅色圆底、鱼身提亮至 70% 白' },
+  { id:'v5_2d88fdd_pillow', commit:'2d88fdd', label:'Pillow 几何鱼形', desc:'用 Pillow 手绘几何鱼形（白粗边+高饱和亮色）' },
+  { id:'v6_3afa7eb_handdrawn', commit:'3afa7eb', label:'代码手绘扁平矢量', desc:'代码手绘 12 个统一扁平矢量鱼标（浅圆底+深蓝描边）' },
+  { id:'emoji', commit:'ddf636e', label:'Emoji 文本版', desc:'用 emoji 字符渲染（非 PNG）：🐟🐠🐡🦈', emoji:true },
+  { id:'current_imagegen', commit:'当前工作区', label:'ImageGen 按外貌定制', desc:'当前版：AI 按每种鱼外貌特征生成（圆白底+青虚线）', current:true }
+];
+
+const root = document.getElementById('root');
+versions.forEach((v, i) => {
+  const card = document.createElement('div');
+  card.className = 'ver';
+  const flag = v.current ? '<span class="ver-flag">当前</span>' : `<span class="ver-commit">#${i+1}</span>`;
+  card.innerHTML = `<div class="ver-head">
+      <span class="ver-name">#${i+1} ${v.label}</span>
+      <span class="ver-commit">${v.commit}</span>
+      ${v.current ? flag : ''}
+      <span class="ver-desc">${v.desc}</span>
+    </div>`;
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  fish.forEach(([key, nm]) => {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    if (v.emoji) {
+      cell.innerHTML = `<span class="emo">${emojiMap[key]}</span><span class="nm">${nm}</span>`;
+    } else {
+      cell.innerHTML = `<img src="./${v.id}/${key}.png" alt="${nm}"><span class="nm">${nm}</span>`;
+    }
+    grid.appendChild(cell);
+  });
+  card.appendChild(grid);
+  root.appendChild(card);
+});
+
+const note = document.createElement('div');
+note.className = 'note';
+note.innerHTML = '说明：以上 6 个 PNG 版本均取自 git 历史（文件名一致，互可替换）。选择某版后我会把对应 12 张 PNG 拷回 ' +
+  '<code>miniprogram/assets/fish-icons/</code>，并把 <code>weather.js</code> 的 icon 字段与 <code>fish-index.wxml</code> 切回图片渲染（emoji 版则切回文本渲染）。当前工作区为 ImageGen 版（尚未 git 提交）。';
+root.appendChild(note);
+</script>
+</body>
+</html>

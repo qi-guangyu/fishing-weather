@@ -85,9 +85,10 @@
       <view class="modal-body">
         <input class="city-search-input" placeholder="搜索城市名称..." value="{{citySearchKey}}" bindinput="onCitySearch" always-embed adjust-position="{{true}}" catchtap="noop" />
         <scroll-view scroll-y class="city-results">
-          <view class="city-result-item" wx:for="{{cityList}}" wx:key="name" data-city="{{item.name}}" bindtap="selectCity">
+          <view class="city-result-item {{item.name === currentCityName ? 'current' : ''}}" wx:for="{{cityList}}" wx:key="name" data-city="{{item.name}}" bindtap="selectCity">
             <text class="city-name">{{item.name}}</text>
-            <text class="city-province">{{item.province}}</text>
+            <text class="city-province" wx:if="{{item.name === currentCityName}}">· 使用中</text>
+            <text class="city-province" wx:else>{{item.province}}</text>
           </view>
         </scroll-view>
       </view>
