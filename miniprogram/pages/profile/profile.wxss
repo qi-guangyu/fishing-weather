@@ -12,75 +12,46 @@
 .profile-header {
   position: relative;
   overflow: hidden;
-  padding: 72rpx 32rpx 104rpx;
+  padding: 64rpx 32rpx 96rpx;
   text-align: center;
   color: #fff;
   background:
-    radial-gradient(120% 80% at 50% 0%, rgba(34,211,238,0.30), transparent 62%),
+    radial-gradient(120% 80% at 50% 0%, rgba(34,211,238,0.26), transparent 62%),
     linear-gradient(160deg, #0b3a52 0%, #0e5a78 50%, #0a2a3f 100%);
   border-bottom: 1rpx solid rgba(255,255,255,0.06);
-  animation: headerIn .6s ease both;
-}
-@keyframes headerIn {
-  from { opacity: 0; transform: translateY(-14rpx); }
-  to { opacity: 1; transform: none; }
-}
-/* 头部流光（缓慢扫过的高光） */
-.profile-header::after {
-  content: '';
-  position: absolute; top: 0; left: -60%;
-  width: 55%; height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.14), transparent);
-  transform: skewX(-18deg);
-  animation: headerSheen 5.5s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes headerSheen {
-  0% { left: -60%; }
-  45% { left: 120%; }
-  100% { left: 120%; }
 }
 
 /* 头像容器：统一尺寸，图片与占位 emoji 二选一填充，避免定位 hack */
 .avatar-wrap {
   position: relative;
-  width: 144rpx; height: 144rpx;
+  width: 132rpx; height: 132rpx;
   border-radius: 50%;
-  margin: 0 auto 24rpx;
+  margin: 0 auto 22rpx;
   overflow: hidden;
   /* 渐变描边环：padding-box 实心底 + border-box 渐变边（微信 WebView 稳定支持） */
   background:
     linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.18)) padding-box,
     linear-gradient(135deg, #4fe9f7 0%, #22d3ee 50%, #38bdf8 100%) border-box;
-  border: 6rpx solid transparent;
-  box-shadow: 0 0 36rpx rgba(34,211,238,0.35);
+  border: 5rpx solid transparent;
+  box-shadow: 0 0 18rpx rgba(34,211,238,0.22);
 }
 .avatar-img, .avatar-emoji {
   width: 100%; height: 100%;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 64rpx;
+  font-size: 60rpx;
 }
 .avatar-badge {
   position: absolute; right: 0; bottom: 0;
-  width: 48rpx; height: 48rpx; border-radius: 50%;
+  width: 44rpx; height: 44rpx; border-radius: 50%;
   background: rgba(34,211,238,0.92);
   display: flex; align-items: center; justify-content: center;
-  font-size: 26rpx; color: #06222b;
+  font-size: 24rpx; color: #06222b;
   box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.3);
 }
 
-.username { font-size: 38rpx; font-weight: 700; letter-spacing: 1rpx; }
+.username { font-size: 36rpx; font-weight: 700; letter-spacing: 1rpx; }
 .user-sub { font-size: 26rpx; opacity: 0.82; margin-top: 10rpx; }
-.edit-pill {
-  display: inline-block; margin-top: 22rpx;
-  padding: 12rpx 36rpx; border-radius: 48rpx;
-  background: linear-gradient(135deg, rgba(34,211,238,0.22), rgba(56,189,248,0.16));
-  border: 1rpx solid rgba(34,211,238,0.45);
-  font-size: 24rpx; color: #eafdff;
-  transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
-}
-.edit-pill:active { transform: scale(0.95); background: linear-gradient(135deg, rgba(34,211,238,0.34), rgba(56,189,248,0.26)); box-shadow: 0 0 20rpx rgba(34,211,238,0.30); }
 
 .login-btn {
   display: inline-block; margin-top: 28rpx;
@@ -95,39 +66,28 @@
 .menu-list {
   background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
   border: 1rpx solid rgba(255,255,255,0.08);
-  border-radius: 32rpx;
+  border-radius: 28rpx;
   margin: 24rpx 28rpx 0;
   overflow: hidden; position: relative;
-  box-shadow: 0 18rpx 50rpx rgba(0,0,0,0.35), inset 0 1rpx 0 rgba(255,255,255,0.06);
-  animation: fadeInUp 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  box-shadow: 0 12rpx 32rpx rgba(0,0,0,0.30), inset 0 1rpx 0 rgba(255,255,255,0.06);
 }
 /* 首张卡上移与头部叠压 */
 .quick-stats { margin-top: -56rpx; padding: 8rpx 0; }
 
-/* 卡片级联入场：四张卡依次淡入上浮，营造层次感 */
-.menu-list:nth-of-type(1) { animation-delay: .04s; }
-.menu-list:nth-of-type(2) { animation-delay: .10s; }
-.menu-list:nth-of-type(3) { animation-delay: .16s; }
-.menu-list:nth-of-type(4) { animation-delay: .22s; }
-
 .menu-item {
-  display: flex; align-items: center; padding: 30rpx 32rpx;
+  display: flex; align-items: center; padding: 28rpx 32rpx;
   border-bottom: 1rpx solid rgba(255,255,255,0.06);
   transition: background .15s ease;
 }
 .menu-item:active { background: rgba(34,211,238,0.10); }
 .menu-item:last-child { border-bottom: none; }
 .mi-icon {
-  width: 72rpx; height: 72rpx; border-radius: 20rpx;
+  width: 68rpx; height: 68rpx; border-radius: 18rpx;
   display: flex; align-items: center; justify-content: center;
-  font-size: 36rpx; margin-right: 28rpx; flex-shrink: 0;
+  font-size: 34rpx; margin-right: 24rpx; flex-shrink: 0;
   background: rgba(34,211,238,0.14);
 }
 .mi-icon.warn { background: rgba(245,158,11,0.16); }
-/* 分组语义色：增强视觉寻路（对齐设计系统语义色板） */
-.menu-list.group-actions .mi-icon { background: rgba(34,211,238,0.14); }   /* 青蓝 #22d3ee */
-.menu-list.group-settings .mi-icon { background: rgba(125,211,252,0.14); } /* 天蓝 #7dd3fc */
-.menu-list.group-help .mi-icon { background: rgba(52,211,153,0.14); }      /* 翡翠绿 #34d399 */
 .mi-label { flex: 1; font-size: 30rpx; color: #eaf2ff; }
 .mi-value { font-size: 26rpx; color: #9fb3c8; }
 .mi-arrow { font-size: 36rpx; color: rgba(159,179,200,0.55); margin-left: 16rpx; }

@@ -103,10 +103,6 @@ Page({
     wx.navigateTo({ url: '/pages/' + page + '/' + page })
   },
 
-  switchCity() {
-    wx.switchTab({ url: '/pages/index/index' })
-  },
-
   // ---------- 编辑资料（进入独立编辑页） ----------
   goEdit() {
     if (!isLoggedIn()) { this.goLogin(); return }
