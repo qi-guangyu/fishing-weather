@@ -53,26 +53,6 @@
     </view>
   </view>
 
-  <!-- 客服与帮助 -->
-  <view class="menu-list">
-    <view class="section-title"><view class="st-bar"></view>客服与帮助</view>
-    <view class="menu-item" bindtap="contactService">
-      <view class="mi-icon">💬</view>
-      <text class="mi-label">联系客服</text>
-      <text class="mi-arrow">›</text>
-    </view>
-    <view class="menu-item" bindtap="openFeedback">
-      <view class="mi-icon">📝</view>
-      <text class="mi-label">帮助与反馈</text>
-      <text class="mi-arrow">›</text>
-    </view>
-    <view class="menu-item" bindtap="showAbout">
-      <view class="mi-icon">ℹ️</view>
-      <text class="mi-label">关于钓鱼气象</text>
-      <text class="mi-arrow">›</text>
-    </view>
-  </view>
-
   <!-- 退出登录 -->
   <view wx:if="{{isLoggedIn}}" class="logout-btn" bindtap="handleLogout">退出登录</view>
 
@@ -105,21 +85,6 @@
           <switch checked="{{privacyShowActivity}}" bindchange="onTogglePrivacyShowActivity" color="#22d3ee" />
         </view>
         <view class="privacy-note">我们严格遵守《个人信息保护法》，不会向第三方出售你的个人信息。详细条款见隐私政策。</view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 帮助与反馈弹窗 -->
-  <view wx:if="{{showFeedback}}" class="modal-overlay" bindtap="closeFeedback">
-    <view class="modal-panel sheet" catchtap="noop">
-      <view class="sheet-head">
-        <text class="sheet-title">帮助与反馈</text>
-        <view class="modal-close" bindtap="closeFeedback">✕</view>
-      </view>
-      <view class="sheet-body">
-        <textarea class="feedback-input" placeholder="说说你遇到的问题或建议..." value="{{feedbackText}}" bindinput="onFeedbackInput" maxlength="500" />
-        <view class="feedback-count">{{feedbackText.length}}/500</view>
-        <button class="btn btn-primary btn-block submit-fb" bindtap="submitFeedback" loading="{{saving}}">提交反馈</button>
       </view>
     </view>
   </view>

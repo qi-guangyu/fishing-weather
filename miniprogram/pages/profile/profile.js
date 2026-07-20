@@ -12,10 +12,7 @@ Page({
     privacyPersonalize: true,
     privacyShowActivity: true,
     // 弹窗状态
-    showPrivacy: false,
-    showFeedback: false,
-    feedbackText: '',
-    saving: false
+    showPrivacy: false
   },
 
   onLoad() {
@@ -131,49 +128,6 @@ Page({
           setTimeout(() => { wx.reLaunch({ url: '/pages/index/index' }) }, 1000)
         }
       }
-    })
-  },
-
-  // ---------- 客服与帮助：联系客服 ----------
-  contactService() {
-    // 优先唤起微信客服会话（需在 mp 后台配置客服）；未配置则降级为复制微信号
-    wx.openCustomerServiceChat({
-      extjson: '{}',
-      corpId: '',
-      success: () => {},
-      fail: () => {
-        wx.showModal({
-          title: '联系客服',
-          content: '客服微信：fishing_helper\n（点击复制后添加）',
-          confirmText: '复制',
-          success: (r) => { if (r.confirm) wx.setClipboardData({ data: 'fishing_helper' }) }
-        })
-      }
-    })
-  },
-
-  // ---------- 客服与帮助：反馈 ----------
-  openFeedback() { this.setData({ showFeedback: true, feedbackText: '' }) },
-  closeFeedback() { this.setData({ showFeedback: false, feedbackText: '' }) },
-  onFeedbackInput(e) { this.setData({ feedbackText: e.detail.value }) },
-  submitFeedback() {
-    const text = (this.data.feedbackText || '').trim()
-    if (!text) { wx.showToast({ title: '请输入反馈内容', icon: 'none' }); return }
-    if (this.data.saving) return
-    this.setData({ saving: true })
-    // 原型阶段：反馈存本地，避免依赖尚未实现的后端接口
-    const list = wx.getStorageSync('feedbacks') || []
-    list.unshift({ text, time: Date.now() })
-    wx.setStorageSync('feedbacks', list)
-    this.setData({ saving: false, showFeedback: false, feedbackText: '' })
-    wx.showToast({ title: '已收到，感谢反馈', icon: 'success' })
-  },
-
-  showAbout() {
-    wx.showModal({
-      title: '关于钓鱼气象',
-      content: '数据来源：和风天气\n版本：v1.0.0\n提供精准鱼情预报，科学出钓不空军',
-      showCancel: false
     })
   },
 
