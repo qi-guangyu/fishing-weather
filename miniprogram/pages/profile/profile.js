@@ -1,25 +1,71 @@
-const { isLoggedIn, logout } = require('../../utils/auth')
+const { isLoggedIn, logout, updateProfile } = require('../../utils/auth')
 const { request } = require('../../utils/request')
 
 Page({
   data: {
     isLoggedIn: false,
     userInfo: null,
+    avatar: '',
+    displayName: '',
     currentCity: '',
-    stats: { catches: 0, favorites: 0, comments: 0, submissions: 0 }
+    stats: { catches: 0, favorites: 0, comments: 0, submissions: 0 },
+    // 本地偏好（设置项）
+    msgNotify: true,
+    privacyPersonalize: true,
+    privacyShowActivity: true,
+    // 弹窗状态
+    showPrivacy: false,
+    showFeedback: false,
+    feedbackText: '',
+    saving: false
+  },
+
+  onLoad() {
+    this.loadSettings()
   },
 
   onShow() {
     const app = getApp()
     const logged = isLoggedIn()
+    const userInfo = logged ? wx.getStorageSync('userInfo') : null
     this.setData({
       isLoggedIn: logged,
-      userInfo: logged ? wx.getStorageSync('userInfo') : null,
+      userInfo,
+      avatar: userInfo ? (userInfo.avatar || '') : '',
+      displayName: this.calcName(userInfo),
       currentCity: app.globalData.currentCity
     })
     if (logged) this.loadStats()
   },
 
+  onPullDownRefresh() {
+    if (isLoggedIn()) this.loadStats()
+    wx.stopPullDownRefresh()
+  },
+
+  noop() {},
+
+  calcName(u) {
+    if (!u) return ''
+    return u.nickname || u.username || '钓鱼爱好者'
+  },
+
+  // ---------- 设置项（本地偏好） ----------
+  loadSettings() {
+    const s = wx.getStorageSync('settings') || {}
+    this.setData({
+      msgNotify: s.msgNotify !== false,
+      privacyPersonalize: s.privacyPersonalize !== false,
+      privacyShowActivity: s.privacyShowActivity !== false
+    })
+  },
+  saveSettings(patch) {
+    const s = wx.getStorageSync('settings') || {}
+    Object.assign(s, patch)
+    wx.setStorageSync('settings', s)
+  },
+
+  // ---------- 统计 ----------
   async loadStats() {
     try {
       const [c, f, m, s] = await Promise.all([
@@ -57,20 +103,105 @@ Page({
     wx.navigateTo({ url: '/pages/' + page + '/' + page })
   },
 
-  handleLogout() {
-    wx.showModal({
-      title: '确认退出',
-      content: '退出后需要重新登录',
+  switchCity() {
+    wx.switchTab({ url: '/pages/index/index' })
+  },
+
+  // ---------- 编辑资料（头像 / 昵称） ----------
+  editProfile() {
+    if (!isLoggedIn()) { this.goLogin(); return }
+    wx.showActionSheet({
+      itemList: ['修改头像', '修改昵称'],
       success: (res) => {
-        if (res.confirm) {
-          logout()
-          this.setData({ isLoggedIn: false, userInfo: null, stats: { catches: 0, favorites: 0, comments: 0, submissions: 0 } })
-          wx.showToast({ title: '已退出登录', icon: 'success' })
+        if (res.tapIndex === 0) this.changeAvatar()
+        else if (res.tapIndex === 1) this.editNickname()
+      }
+    })
+  },
+
+  changeAvatar() {
+    if (!isLoggedIn()) { this.goLogin(); return }
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      sizeType: ['compressed'],
+      success: async (res) => {
+        const temp = res.tempFiles && res.tempFiles[0] && res.tempFiles[0].tempFilePath
+        if (!temp) return
+        wx.showLoading({ title: '上传中...' })
+        try {
+          const updated = await updateProfile({ avatarPath: temp })
+          wx.hideLoading()
+          if (updated && updated.avatar) {
+            const u = Object.assign({}, this.data.userInfo, updated)
+            wx.setStorageSync('userInfo', u)
+            this.setData({ userInfo: u, avatar: updated.avatar })
+            wx.showToast({ title: '头像已更新', icon: 'success' })
+          } else {
+            wx.showToast({ title: '更新失败，请重试', icon: 'none' })
+          }
+        } catch (e) {
+          wx.hideLoading()
+          wx.showToast({ title: '更新失败', icon: 'none' })
         }
       }
     })
   },
 
+  editNickname() {
+    if (!isLoggedIn()) { this.goLogin(); return }
+    wx.showModal({
+      title: '修改昵称',
+      editable: true,
+      placeholderText: '请输入昵称（最多 32 字）',
+      content: this.data.displayName || '',
+      success: async (res) => {
+        if (!res.confirm) return
+        const name = (res.content || '').trim()
+        if (!name) { wx.showToast({ title: '昵称不能为空', icon: 'none' }); return }
+        if (name === this.data.displayName) return
+        wx.showLoading({ title: '保存中...' })
+        try {
+          const updated = await updateProfile({ nickname: name })
+          wx.hideLoading()
+          const u = Object.assign({}, this.data.userInfo, updated || { nickname: name })
+          wx.setStorageSync('userInfo', u)
+          this.setData({ userInfo: u, displayName: this.calcName(u) })
+          wx.showToast({ title: '已保存', icon: 'success' })
+        } catch (e) {
+          wx.hideLoading()
+          wx.showToast({ title: '保存失败', icon: 'none' })
+        }
+      }
+    })
+  },
+
+  // ---------- 系统设置：消息通知 ----------
+  onToggleNotify(e) {
+    const v = e.detail.value
+    this.setData({ msgNotify: v })
+    this.saveSettings({ msgNotify: v })
+  },
+
+  // ---------- 系统设置：隐私 ----------
+  openPrivacy() {
+    this.loadSettings()
+    this.setData({ showPrivacy: true })
+  },
+  closePrivacy() { this.setData({ showPrivacy: false }) },
+  onTogglePrivacyPersonalize(e) {
+    const v = e.detail.value
+    this.setData({ privacyPersonalize: v })
+    this.saveSettings({ privacyPersonalize: v })
+  },
+  onTogglePrivacyShowActivity(e) {
+    const v = e.detail.value
+    this.setData({ privacyShowActivity: v })
+    this.saveSettings({ privacyShowActivity: v })
+  },
+
+  // ---------- 系统设置：清除缓存 ----------
   clearCache() {
     wx.showModal({
       title: '清除缓存',
@@ -88,12 +219,53 @@ Page({
           if (keep.token) wx.setStorageSync('token', keep.token)
           if (keep.userInfo) wx.setStorageSync('userInfo', keep.userInfo)
           if (keep.privacyConsent) wx.setStorageSync('privacyConsent', keep.privacyConsent)
+          // 用户偏好设置重新写回
+          this.saveSettings({
+            msgNotify: this.data.msgNotify,
+            privacyPersonalize: this.data.privacyPersonalize,
+            privacyShowActivity: this.data.privacyShowActivity
+          })
           if (app && app.globalData) app.globalData.currentCity = '常熟'
           wx.showToast({ title: '清除成功', icon: 'success' })
           setTimeout(() => { wx.reLaunch({ url: '/pages/index/index' }) }, 1000)
         }
       }
     })
+  },
+
+  // ---------- 客服与帮助：联系客服 ----------
+  contactService() {
+    // 优先唤起微信客服会话（需在 mp 后台配置客服）；未配置则降级为复制微信号
+    wx.openCustomerServiceChat({
+      extjson: '{}',
+      corpId: '',
+      success: () => {},
+      fail: () => {
+        wx.showModal({
+          title: '联系客服',
+          content: '客服微信：fishing_helper\n（点击复制后添加）',
+          confirmText: '复制',
+          success: (r) => { if (r.confirm) wx.setClipboardData({ data: 'fishing_helper' }) }
+        })
+      }
+    })
+  },
+
+  // ---------- 客服与帮助：反馈 ----------
+  openFeedback() { this.setData({ showFeedback: true, feedbackText: '' }) },
+  closeFeedback() { this.setData({ showFeedback: false, feedbackText: '' }) },
+  onFeedbackInput(e) { this.setData({ feedbackText: e.detail.value }) },
+  submitFeedback() {
+    const text = (this.data.feedbackText || '').trim()
+    if (!text) { wx.showToast({ title: '请输入反馈内容', icon: 'none' }); return }
+    if (this.data.saving) return
+    this.setData({ saving: true })
+    // 原型阶段：反馈存本地，避免依赖尚未实现的后端接口
+    const list = wx.getStorageSync('feedbacks') || []
+    list.unshift({ text, time: Date.now() })
+    wx.setStorageSync('feedbacks', list)
+    this.setData({ saving: false, showFeedback: false, feedbackText: '' })
+    wx.showToast({ title: '已收到，感谢反馈', icon: 'success' })
   },
 
   showAbout() {
@@ -104,7 +276,23 @@ Page({
     })
   },
 
-  switchCity() {
-    wx.switchTab({ url: '/pages/index/index' })
+  handleLogout() {
+    wx.showModal({
+      title: '确认退出',
+      content: '退出后需要重新登录',
+      success: (res) => {
+        if (res.confirm) {
+          logout()
+          this.setData({
+            isLoggedIn: false,
+            userInfo: null,
+            avatar: '',
+            displayName: '',
+            stats: { catches: 0, favorites: 0, comments: 0, submissions: 0 }
+          })
+          wx.showToast({ title: '已退出登录', icon: 'success' })
+        }
+      }
+    })
   }
 })

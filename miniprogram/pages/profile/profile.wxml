@@ -2,29 +2,46 @@
   <!-- 用户头部 -->
   <view class="profile-header">
     <block wx:if="{{isLoggedIn}}">
-      <view class="avatar">{{userInfo.avatar ? '' : '🎣'}}</view>
-      <ugc-image wx:if="{{userInfo.avatar}}" src="{{userInfo.avatar}}" mode="aspectFill" img-class="avatar-img" />
-      <view class="username">{{userInfo.username || '钓鱼爱好者'}}</view>
+      <view class="avatar-wrap" bindtap="changeAvatar">
+        <ugc-image wx:if="{{avatar}}" src="{{avatar}}" mode="aspectFill" img-class="avatar-img" />
+        <view wx:else class="avatar-emoji">🎣</view>
+        <view class="avatar-badge">✎</view>
+      </view>
+      <view class="username" bindtap="editNickname">{{displayName}}</view>
       <view class="user-sub">当前城市：{{currentCity}}</view>
+      <view class="edit-pill" bindtap="editProfile">✏️ 编辑资料</view>
     </block>
     <block wx:else>
-      <view class="avatar">🎣</view>
+      <view class="avatar-wrap"><view class="avatar-emoji">🎣</view></view>
       <view class="username">未登录</view>
       <view class="user-sub">登录后可同步数据到云端</view>
       <view class="login-btn" bindtap="goLogin">微信登录</view>
     </block>
   </view>
 
-  <!-- 菜单列表 -->
-  <view class="menu-list">
-    <view class="menu-item" bindtap="switchCity">
-      <view class="mi-icon">🌍</view>
-      <text class="mi-label">切换城市</text>
-      <text class="mi-value">{{currentCity}}</text>
-      <text class="mi-arrow">›</text>
+  <!-- 快捷入口模块（我的渔获 / 收藏 / 投稿 / 评论） -->
+  <view class="menu-list quick-stats">
+    <view class="stat-tile" bindtap="goList" data-type="catches">
+      <view class="stat-num">{{stats.catches}}</view>
+      <view class="stat-label">渔获</view>
     </view>
+    <view class="stat-tile" bindtap="goList" data-type="favorites">
+      <view class="stat-num">{{stats.favorites}}</view>
+      <view class="stat-label">收藏</view>
+    </view>
+    <view class="stat-tile" bindtap="goList" data-type="submissions">
+      <view class="stat-num">{{stats.submissions}}</view>
+      <view class="stat-label">投稿</view>
+    </view>
+    <view class="stat-tile" bindtap="goList" data-type="comments">
+      <view class="stat-num">{{stats.comments}}</view>
+      <view class="stat-label">评论</view>
+    </view>
+  </view>
 
-    <!-- 发布入口 -->
+  <!-- 常用功能 -->
+  <view class="menu-list">
+    <view class="section-title"><view class="st-bar"></view>常用功能</view>
     <view class="menu-item" bindtap="goPublish" data-page="catch-publish">
       <view class="mi-icon">🎣</view>
       <text class="mi-label">发布渔获</text>
@@ -35,36 +52,25 @@
       <text class="mi-label">投稿钓点</text>
       <text class="mi-arrow">›</text>
     </view>
+    <view class="menu-item" bindtap="switchCity">
+      <view class="mi-icon">🌍</view>
+      <text class="mi-label">切换城市</text>
+      <text class="mi-value">{{currentCity}}</text>
+      <text class="mi-arrow">›</text>
+    </view>
+  </view>
 
-    <!-- 用户中心入口 -->
-    <view class="menu-item" bindtap="goList" data-type="catches">
-      <view class="mi-icon">🎣</view>
-      <text class="mi-label">我的渔获</text>
-      <text class="mi-value" wx:if="{{stats.catches > 0}}">{{stats.catches}}</text>
-      <text class="mi-arrow">›</text>
+  <!-- 系统设置 -->
+  <view class="menu-list">
+    <view class="section-title"><view class="st-bar"></view>系统设置</view>
+    <view class="menu-item">
+      <view class="mi-icon">🔔</view>
+      <text class="mi-label">消息通知</text>
+      <switch class="mi-switch" checked="{{msgNotify}}" bindchange="onToggleNotify" color="#22d3ee" />
     </view>
-    <view class="menu-item" bindtap="goList" data-type="favorites">
-      <view class="mi-icon gold">⭐</view>
-      <text class="mi-label">我的收藏</text>
-      <text class="mi-value" wx:if="{{stats.favorites > 0}}">{{stats.favorites}}</text>
-      <text class="mi-arrow">›</text>
-    </view>
-    <view class="menu-item" bindtap="goList" data-type="submissions">
-      <view class="mi-icon">📝</view>
-      <text class="mi-label">我的投稿</text>
-      <text class="mi-value" wx:if="{{stats.submissions > 0}}">{{stats.submissions}}</text>
-      <text class="mi-arrow">›</text>
-    </view>
-    <view class="menu-item" bindtap="goList" data-type="comments">
-      <view class="mi-icon">💬</view>
-      <text class="mi-label">我的评论</text>
-      <text class="mi-value" wx:if="{{stats.comments > 0}}">{{stats.comments}}</text>
-      <text class="mi-arrow">›</text>
-    </view>
-
-    <view class="menu-item" bindtap="showAbout">
-      <view class="mi-icon">ℹ️</view>
-      <text class="mi-label">关于钓鱼气象</text>
+    <view class="menu-item" bindtap="openPrivacy">
+      <view class="mi-icon">🛡️</view>
+      <text class="mi-label">隐私设置</text>
       <text class="mi-arrow">›</text>
     </view>
     <view class="menu-item" bindtap="clearCache">
@@ -72,16 +78,76 @@
       <text class="mi-label">清除缓存</text>
       <text class="mi-arrow">›</text>
     </view>
-    <view class="menu-item" wx:if="{{isLoggedIn}}" bindtap="handleLogout">
-      <view class="mi-icon danger">🚪</view>
-      <text class="mi-label">退出登录</text>
+  </view>
+
+  <!-- 客服与帮助 -->
+  <view class="menu-list">
+    <view class="section-title"><view class="st-bar"></view>客服与帮助</view>
+    <view class="menu-item" bindtap="contactService">
+      <view class="mi-icon">💬</view>
+      <text class="mi-label">联系客服</text>
+      <text class="mi-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="openFeedback">
+      <view class="mi-icon">📝</view>
+      <text class="mi-label">帮助与反馈</text>
+      <text class="mi-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="showAbout">
+      <view class="mi-icon">ℹ️</view>
+      <text class="mi-label">关于钓鱼气象</text>
       <text class="mi-arrow">›</text>
     </view>
   </view>
+
+  <!-- 退出登录 -->
+  <view wx:if="{{isLoggedIn}}" class="logout-btn" bindtap="handleLogout">退出登录</view>
 
   <!-- 底部信息 -->
   <view class="footer-info">
     <text>数据来源：和风天气</text>
     <text class="version">钓鱼气象 v1.0.0</text>
+  </view>
+
+  <!-- 隐私设置弹窗 -->
+  <view wx:if="{{showPrivacy}}" class="modal-overlay" bindtap="closePrivacy">
+    <view class="modal-panel sheet" catchtap="noop">
+      <view class="sheet-head">
+        <text class="sheet-title">隐私设置</text>
+        <view class="modal-close" bindtap="closePrivacy">✕</view>
+      </view>
+      <view class="sheet-body">
+        <view class="switch-row">
+          <view class="sr-text">
+            <view class="sr-label">个性化内容推荐</view>
+            <view class="sr-sub">根据你的偏好推荐钓点与渔获</view>
+          </view>
+          <switch checked="{{privacyPersonalize}}" bindchange="onTogglePrivacyPersonalize" color="#22d3ee" />
+        </view>
+        <view class="switch-row">
+          <view class="sr-text">
+            <view class="sr-label">展示我的动态</view>
+            <view class="sr-sub">允许他人在动态中看到你的渔获与评论</view>
+          </view>
+          <switch checked="{{privacyShowActivity}}" bindchange="onTogglePrivacyShowActivity" color="#22d3ee" />
+        </view>
+        <view class="privacy-note">我们严格遵守《个人信息保护法》，不会向第三方出售你的个人信息。详细条款见隐私政策。</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 帮助与反馈弹窗 -->
+  <view wx:if="{{showFeedback}}" class="modal-overlay" bindtap="closeFeedback">
+    <view class="modal-panel sheet" catchtap="noop">
+      <view class="sheet-head">
+        <text class="sheet-title">帮助与反馈</text>
+        <view class="modal-close" bindtap="closeFeedback">✕</view>
+      </view>
+      <view class="sheet-body">
+        <textarea class="feedback-input" placeholder="说说你遇到的问题或建议..." value="{{feedbackText}}" bindinput="onFeedbackInput" maxlength="500" />
+        <view class="feedback-count">{{feedbackText.length}}/500</view>
+        <button class="btn btn-primary btn-block submit-fb" bindtap="submitFeedback" loading="{{saving}}">提交反馈</button>
+      </view>
+    </view>
   </view>
 </view>
