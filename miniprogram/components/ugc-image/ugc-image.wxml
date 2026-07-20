@@ -1,2 +1,2 @@
 <!-- UGC 图片组件：自动解析 data:/cloud:///相对路径 为可显示地址 -->
-<image src="{{displaySrc}}" mode="{{mode}}" class="{{imgClass}}" bindtap="onTap" />
+<image src="{{displaySrc}}" mode="{{mode}}" class="{{imgClass}}" catchtap="onTap" />
