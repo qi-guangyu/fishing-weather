@@ -13,8 +13,11 @@ module.exports = {
 
   // 云托管环境 ID：控制台「环境配置」可见，形如 prod-xxxxxxxx 或一串字母数字。
   // 留空 => 走上面的 API_BASE 直连（本地调试）；填写 => 走 callContainer（线上自用）。
+  // ⚠️ 体验版/正式版必须用云托管模式：真机无法访问你电脑的 127.0.0.1:3456
   CLOUD_ENV: 'prod-d9gmr5ocxdc6aa294',
 
   // 云托管服务名称（控制台 → 服务管理 → 服务名称）
   SERVICE_NAME: 'express-498e'
 };
+
+

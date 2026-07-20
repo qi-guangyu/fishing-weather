@@ -663,12 +663,20 @@ app.post('/api/auth/wechat-login', async (req, res) => {
     const https = require('https');
     const wxApiUrl = 'https://api.weixin.qq.com/sns/jscode2session?appid=' + WECHAT_APPID +
       '&secret=' + WECHAT_SECRET + '&js_code=' + code + '&grant_type=authorization_code';
+    // 本地调试专用：若本机网络存在 HTTPS 拦截代理(自签证书)，微信官方证书会被替换，
+    // 导致 Node 拒绝连接并报「self-signed certificate」。设置 TRUST_WX_SELF_SIGNED=true 可临时绕过。
+    // ⚠️ 仅本地调试用！云托管/生产环境切勿开启（有中间人攻击风险，且云托管网络正常无需此开关）。
+    const wxReqOptions = {};
+    if (process.env.TRUST_WX_SELF_SIGNED === 'true') {
+      wxReqOptions.agent = new https.Agent({ rejectUnauthorized: false });
+    }
     const wxResp = await new Promise((resolve, reject) => {
-      https.get(wxApiUrl, (resp) => {
+      const req = https.get(wxApiUrl, wxReqOptions, (resp) => {
         let data = '';
         resp.on('data', (chunk) => data += chunk);
         resp.on('end', () => resolve(JSON.parse(data)));
-      }).on('error', reject);
+      });
+      req.on('error', reject);
     });
     if (!wxResp.openid) {
       // 常见：40013(invalid appid) / 40001(invalid secret) / 41008(缺少code) 等
