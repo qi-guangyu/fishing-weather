@@ -6,6 +6,7 @@
     "pages/spot-detail/spot-detail",
     "pages/login/login",
     "pages/profile/profile",
+    "pages/edit-profile/edit-profile",
     "pages/my-list/my-list",
     "pages/catch-publish/catch-publish",
     "pages/spot-submit/spot-submit",

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "编辑资料",
+  "usingComponents": {
+    "ugc-image": "/components/ugc-image/ugc-image"
+  }
+}

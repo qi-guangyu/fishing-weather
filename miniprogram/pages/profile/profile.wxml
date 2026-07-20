@@ -2,14 +2,14 @@
   <!-- 用户头部 -->
   <view class="profile-header">
     <block wx:if="{{isLoggedIn}}">
-      <view class="avatar-wrap" bindtap="changeAvatar">
+      <view class="avatar-wrap" bindtap="goEdit">
         <ugc-image wx:if="{{avatar}}" src="{{avatar}}" mode="aspectFill" img-class="avatar-img" />
         <view wx:else class="avatar-emoji">🎣</view>
         <view class="avatar-badge">✎</view>
       </view>
-      <view class="username" bindtap="editNickname">{{displayName}}</view>
+      <view class="username" bindtap="goEdit">{{displayName}}</view>
       <view class="user-sub">当前城市：{{currentCity}}</view>
-      <view class="edit-pill" bindtap="editProfile">✏️ 编辑资料</view>
+      <view class="edit-pill" bindtap="goEdit">✏️ 编辑资料</view>
     </block>
     <block wx:else>
       <view class="avatar-wrap"><view class="avatar-emoji">🎣</view></view>

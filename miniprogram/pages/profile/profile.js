@@ -1,4 +1,4 @@
-const { isLoggedIn, logout, updateProfile } = require('../../utils/auth')
+const { isLoggedIn, logout } = require('../../utils/auth')
 const { request } = require('../../utils/request')
 
 Page({
@@ -107,74 +107,10 @@ Page({
     wx.switchTab({ url: '/pages/index/index' })
   },
 
-  // ---------- 编辑资料（头像 / 昵称） ----------
-  editProfile() {
+  // ---------- 编辑资料（进入独立编辑页） ----------
+  goEdit() {
     if (!isLoggedIn()) { this.goLogin(); return }
-    wx.showActionSheet({
-      itemList: ['修改头像', '修改昵称'],
-      success: (res) => {
-        if (res.tapIndex === 0) this.changeAvatar()
-        else if (res.tapIndex === 1) this.editNickname()
-      }
-    })
-  },
-
-  changeAvatar() {
-    if (!isLoggedIn()) { this.goLogin(); return }
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      sourceType: ['album', 'camera'],
-      sizeType: ['compressed'],
-      success: async (res) => {
-        const temp = res.tempFiles && res.tempFiles[0] && res.tempFiles[0].tempFilePath
-        if (!temp) return
-        wx.showLoading({ title: '上传中...' })
-        try {
-          const updated = await updateProfile({ avatarPath: temp })
-          wx.hideLoading()
-          if (updated && updated.avatar) {
-            const u = Object.assign({}, this.data.userInfo, updated)
-            wx.setStorageSync('userInfo', u)
-            this.setData({ userInfo: u, avatar: updated.avatar })
-            wx.showToast({ title: '头像已更新', icon: 'success' })
-          } else {
-            wx.showToast({ title: '更新失败，请重试', icon: 'none' })
-          }
-        } catch (e) {
-          wx.hideLoading()
-          wx.showToast({ title: '更新失败', icon: 'none' })
-        }
-      }
-    })
-  },
-
-  editNickname() {
-    if (!isLoggedIn()) { this.goLogin(); return }
-    wx.showModal({
-      title: '修改昵称',
-      editable: true,
-      placeholderText: '请输入昵称（最多 32 字）',
-      content: this.data.displayName || '',
-      success: async (res) => {
-        if (!res.confirm) return
-        const name = (res.content || '').trim()
-        if (!name) { wx.showToast({ title: '昵称不能为空', icon: 'none' }); return }
-        if (name === this.data.displayName) return
-        wx.showLoading({ title: '保存中...' })
-        try {
-          const updated = await updateProfile({ nickname: name })
-          wx.hideLoading()
-          const u = Object.assign({}, this.data.userInfo, updated || { nickname: name })
-          wx.setStorageSync('userInfo', u)
-          this.setData({ userInfo: u, displayName: this.calcName(u) })
-          wx.showToast({ title: '已保存', icon: 'success' })
-        } catch (e) {
-          wx.hideLoading()
-          wx.showToast({ title: '保存失败', icon: 'none' })
-        }
-      }
-    })
+    wx.navigateTo({ url: '/pages/edit-profile/edit-profile' })
   },
 
   // ---------- 系统设置：消息通知 ----------

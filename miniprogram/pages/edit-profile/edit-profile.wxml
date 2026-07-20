@@ -1,0 +1,25 @@
+<view class="edit-page">
+  <view class="avatar-block">
+    <view class="avatar-wrap" bindtap="chooseAvatar">
+      <ugc-image wx:if="{{avatarDisplay}}" src="{{avatarDisplay}}" mode="aspectFill" img-class="ei-avatar" />
+      <view wx:else class="avatar-emoji">🎣</view>
+      <view class="avatar-badge">📷</view>
+    </view>
+    <text class="avatar-tip">点击更换头像</text>
+  </view>
+
+  <view class="form-card">
+    <view class="form-row">
+      <text class="form-label">昵称</text>
+      <input class="form-input" value="{{nickname}}" bindinput="onNicknameInput"
+             maxlength="{{maxLen}}" placeholder="请输入昵称" placeholder-class="form-ph" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">用户名</text>
+      <text class="form-value">{{username}}</text>
+    </view>
+    <view class="form-hint">用户名用于登录，不可修改</view>
+  </view>
+
+  <button class="btn btn-primary btn-block save-btn" bindtap="save" loading="{{saving}}">保存</button>
+</view>
