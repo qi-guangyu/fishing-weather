@@ -111,7 +111,82 @@ function getProvinceForCity(city) {
     '西安': '陕西省', '兰州': '甘肃省', '西宁': '青海省', '银川': '宁夏回族自治区',
     '乌鲁木齐': '新疆维吾尔自治区'
   }
-  return provinceMap[city] || ''
+  // 补全缺失省份的城市（避免选择器中省份显示空白）
+  const extraProvince = {
+    '中山': '广东省', '九江': '江西省', '保定': '河北省', '台州': '浙江省', '威海': '山东省',
+    '安庆': '安徽省', '惠州': '广东省', '日照': '山东省', '柳州': '广西壮族自治区', '江门': '广东省',
+    '泰州': '江苏省', '淮安': '江苏省', '湖州': '浙江省', '潍坊': '山东省', '盐城': '江苏省',
+    '绍兴': '浙江省', '蚌埠': '安徽省', '襄阳': '湖北省', '赣州': '江西省', '连云港': '江苏省',
+    '遵义': '贵州省', '金华': '浙江省', '镇江': '江苏省'
+  }
+  return provinceMap[city] || extraProvince[city] || ''
+}
+
+// ==================== 城市拼音（用于搜索，按音节空格分隔） ====================
+// 支持：中文名 / 全拼 / 首字母 三种搜索。如「常熟」可搜「常熟」「changshu」「cs」。
+const cityPinyin = {
+  '三亚': 'san ya', '上海': 'shang hai', '东莞': 'dong guan', '中山': 'zhong shan',
+  '乌鲁木齐': 'wu lu mu qi', '九江': 'jiu jiang', '佛山': 'fo shan', '保定': 'bao ding',
+  '兰州': 'lan zhou', '北京': 'bei jing', '南京': 'nan jing', '南宁': 'nan ning',
+  '南昌': 'nan chang', '南通': 'nan tong', '厦门': 'xia men', '台州': 'tai zhou',
+  '合肥': 'he fei', '呼和浩特': 'hu he hao te', '哈尔滨': 'ha er bin', '唐山': 'tang shan',
+  '嘉兴': 'jia xing', '大连': 'da lian', '天津': 'tian jin', '太原': 'tai yuan',
+  '威海': 'wei hai', '宁波': 'ning bo', '安庆': 'an qing', '宜昌': 'yi chang',
+  '常州': 'chang zhou', '常熟': 'chang shu', '广州': 'guang zhou', '徐州': 'xu zhou',
+  '惠州': 'hui zhou', '成都': 'cheng du', '扬州': 'yang zhou', '拉萨': 'la sa',
+  '无锡': 'wu xi', '日照': 'ri zhao', '昆明': 'kun ming', '杭州': 'hang zhou',
+  '柳州': 'liu zhou', '桂林': 'gui lin', '武汉': 'wu han', '江门': 'jiang men',
+  '沈阳': 'shen yang', '泰州': 'tai zhou', '洛阳': 'luo yang', '济南': 'ji nan',
+  '海口': 'hai kou', '淮安': 'huai an', '深圳': 'shen zhen', '温州': 'wen zhou',
+  '湖州': 'hu zhou', '潍坊': 'wei fang', '烟台': 'yan tai', '珠海': 'zhu hai',
+  '盐城': 'yan cheng', '石家庄': 'shi jia zhuang', '福州': 'fu zhou', '秦皇岛': 'qin huang dao',
+  '绍兴': 'shao xing', '芜湖': 'wu hu', '苏州': 'su zhou', '蚌埠': 'beng bu',
+  '襄阳': 'xiang yang', '西宁': 'xi ning', '西安': 'xi an', '贵阳': 'gui yang',
+  '赣州': 'gan zhou', '连云港': 'lian yun gang', '遵义': 'zun yi', '郑州': 'zheng zhou',
+  '重庆': 'chong qing', '金华': 'jin hua', '银川': 'yin chuan', '镇江': 'zhen jiang',
+  '长春': 'chang chun', '长沙': 'chang sha', '青岛': 'qing dao'
+}
+function getCityPinyin(city) {
+  return cityPinyin[city] || ''
+}
+function getCityInitials(city) {
+  const py = cityPinyin[city] || ''
+  return py ? py.split(' ').map(s => s[0]).join('') : ''
+}
+
+// 按关键词搜索城市（支持 中文名 / 全拼 / 首字母 / 省份）
+function searchCities(key) {
+  if (!key) return Object.keys(cityCoords).map(c => ({ name: c, province: getProvinceForCity(c) }))
+  const k = String(key).trim().toLowerCase()
+  if (!k) return Object.keys(cityCoords).map(c => ({ name: c, province: getProvinceForCity(c) }))
+  return Object.keys(cityCoords)
+    .filter(c => {
+      const py = (cityPinyin[c] || '').replace(/\s/g, '')
+      const ini = getCityInitials(c)
+      return c.indexOf(k) >= 0
+        || py.indexOf(k) >= 0
+        || ini.indexOf(k) >= 0
+        || (getProvinceForCity(c) || '').indexOf(k) >= 0
+    })
+    .map(c => ({ name: c, province: getProvinceForCity(c) }))
+}
+
+// 按省份分组（组内、组间均按拼音排序），用于选择器浏览视图
+function getCitiesGrouped() {
+  const groups = {}
+  Object.keys(cityCoords).forEach(c => {
+    const prov = getProvinceForCity(c) || '其他'
+    if (!groups[prov]) groups[prov] = []
+    groups[prov].push({ name: c, province: prov, py: cityPinyin[c] || c })
+  })
+  Object.keys(groups).forEach(p => groups[p].sort((a, b) => (a.py || a.name).localeCompare(b.py || b.name)))
+  return Object.keys(groups)
+    .sort((a, b) => {
+      const pa = (groups[a][0].py || groups[a][0].name)
+      const pb = (groups[b][0].py || groups[b][0].name)
+      return pa.localeCompare(pb)
+    })
+    .map(p => ({ province: p, cities: groups[p] }))
 }
 
 // ==================== 钓鱼评分算法 ====================
@@ -501,6 +576,10 @@ function getMockWeather(city) {
 module.exports = {
   cityCoords,
   getProvinceForCity,
+  getCityPinyin,
+  getCityInitials,
+  searchCities,
+  getCitiesGrouped,
   calcFishScore,
   getScoreTag,
   getScoreLevel,

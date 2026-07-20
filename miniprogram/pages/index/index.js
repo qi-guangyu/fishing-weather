@@ -25,10 +25,15 @@ Page({
     // 状态
     loading: true,
     isLoggedIn: false,
-    // 城市列表
-    cityList: [],
+    // 城市选择
     showCityPicker: false,
-    citySearchKey: ''
+    citySearchKey: '',
+    // 优化后的选择器数据
+    cityGroups: [],        // 按省份分组（浏览态）
+    searchResults: [],     // 搜索态扁平结果
+    searching: false,      // 是否处于搜索态
+    recentCities: [],      // 最近选择（存储）
+    currentCityName: ''    // 当前城市（用于高亮）
   },
 
   onLoad() {
@@ -220,33 +225,41 @@ Page({
 
   // 钓鱼指数模块（钓法/鱼种/日期切换 + 24h鱼情表）已迁移至 pages/fish-index
 
-  // ==================== 城市选择 ====================
+  // ==================== 城市选择（优化：分组 + 拼音搜索 + 最近选择） ====================
   showCityPicker() {
-    const cities = Object.keys(weather.cityCoords)
+    const recent = wx.getStorageSync('recent_cities') || []
     this.setData({
       showCityPicker: true,
-      cityList: cities.map(c => ({ name: c, province: weather.getProvinceForCity(c) }))
+      searching: false,
+      citySearchKey: '',
+      cityGroups: weather.getCitiesGrouped(),
+      recentCities: recent,
+      currentCityName: this.data.currentCity
     })
   },
 
   hideCityPicker() {
-    this.setData({ showCityPicker: false, citySearchKey: '' })
+    this.setData({ showCityPicker: false, citySearchKey: '', searching: false })
   },
 
   onCitySearch(e) {
     const key = e.detail.value
-    const cities = Object.keys(weather.cityCoords)
-    const filtered = cities.filter(c => c.includes(key) || (weather.getProvinceForCity(c) || '').includes(key))
-    this.setData({
-      citySearchKey: key,
-      cityList: filtered.map(c => ({ name: c, province: weather.getProvinceForCity(c) }))
-    })
+    if (!key || !key.trim()) {
+      this.setData({ citySearchKey: '', searching: false })
+      return
+    }
+    const results = weather.searchCities(key)
+    this.setData({ citySearchKey: key, searching: true, searchResults: results })
   },
 
   selectCity(e) {
     const app = getApp()
     const city = e.currentTarget.dataset.city
-    this.setData({ showCityPicker: false, currentCity: city, citySearchKey: '' })
+    // 写入最近选择（去重、置顶、最多 6 个）
+    let recent = wx.getStorageSync('recent_cities') || []
+    recent = [city, ...recent.filter(c => c !== city)].slice(0, 6)
+    wx.setStorageSync('recent_cities', recent)
+    this.setData({ showCityPicker: false, currentCity: city, citySearchKey: '', searching: false })
     app.globalData.currentCity = city
     wx.setStorageSync('currentCity', city)
     this.loadWeatherData(true)
@@ -259,31 +272,40 @@ Page({
   },
 
   // ==================== 定位 ====================
+  // 地球两点距离（haversine，单位 km），比原始经纬度平方距离精确
+  haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371
+    const toRad = d => d * Math.PI / 180
+    const dLat = toRad(lat2 - lat1)
+    const dLon = toRad(lon2 - lon1)
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  },
+
   getLocation() {
     const app = getApp()
     wx.getLocation({
       type: 'wgs84',
       success: (res) => {
-        // 简单匹配最近城市
         const cities = Object.entries(weather.cityCoords)
-        let nearest = cities[0]
+        let nearest = cities[0][0]
         let minDist = Infinity
         for (const [name, coord] of cities) {
-          const dist = Math.pow(coord.lat - res.latitude, 2) + Math.pow(coord.lon - res.longitude, 2)
-          if (dist < minDist) {
-            minDist = dist
-            nearest = [name, coord]
-          }
+          const dist = this.haversine(res.latitude, res.longitude, coord.lat, coord.lon)
+          if (dist < minDist) { minDist = dist; nearest = name }
         }
-        const city = nearest[0]
+        const city = nearest
         this.setData({ currentCity: city })
         app.globalData.currentCity = city
         wx.setStorageSync('currentCity', city)
         this.loadWeatherData(true)
-        wx.showToast({ title: '已定位到' + city, icon: 'success' })
+        const tip = minDist > 80 ? ('已定位到 ' + city + '（最近城市）') : ('已定位到 ' + city)
+        wx.showToast({ title: tip, icon: 'success' })
       },
-      fail: () => {
-        wx.showToast({ title: '定位失败', icon: 'none' })
+      fail: (err) => {
+        // 用户拒绝授权或定位失败，引导手动选择，而非只报"定位失败"
+        wx.showToast({ title: '定位失败，请手动选择城市', icon: 'none' })
       }
     })
   },
