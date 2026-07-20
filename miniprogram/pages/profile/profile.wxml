@@ -18,26 +18,6 @@
     </block>
   </view>
 
-  <!-- 快捷入口模块（我的渔获 / 收藏 / 投稿 / 评论） -->
-  <view class="menu-list quick-stats">
-    <view class="stat-tile" bindtap="goList" data-type="catches">
-      <view class="stat-num">{{stats.catches}}</view>
-      <view class="stat-label">渔获</view>
-    </view>
-    <view class="stat-tile" bindtap="goList" data-type="favorites">
-      <view class="stat-num">{{stats.favorites}}</view>
-      <view class="stat-label">收藏</view>
-    </view>
-    <view class="stat-tile" bindtap="goList" data-type="submissions">
-      <view class="stat-num">{{stats.submissions}}</view>
-      <view class="stat-label">投稿</view>
-    </view>
-    <view class="stat-tile" bindtap="goList" data-type="comments">
-      <view class="stat-num">{{stats.comments}}</view>
-      <view class="stat-label">评论</view>
-    </view>
-  </view>
-
   <!-- 常用功能 -->
   <view class="menu-list">
     <view class="section-title"><view class="st-bar"></view>常用功能</view>

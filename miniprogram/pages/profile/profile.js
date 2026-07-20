@@ -1,5 +1,4 @@
 const { isLoggedIn, logout } = require('../../utils/auth')
-const { request } = require('../../utils/request')
 
 Page({
   data: {
@@ -8,7 +7,6 @@ Page({
     avatar: '',
     displayName: '',
     currentCity: '',
-    stats: { catches: 0, favorites: 0, comments: 0, submissions: 0 },
     // 本地偏好（设置项）
     msgNotify: true,
     privacyPersonalize: true,
@@ -35,11 +33,9 @@ Page({
       displayName: this.calcName(userInfo),
       currentCity: app.globalData.currentCity
     })
-    if (logged) this.loadStats()
   },
 
   onPullDownRefresh() {
-    if (isLoggedIn()) this.loadStats()
     wx.stopPullDownRefresh()
   },
 
@@ -65,36 +61,9 @@ Page({
     wx.setStorageSync('settings', s)
   },
 
-  // ---------- 统计 ----------
-  async loadStats() {
-    try {
-      const [c, f, m, s] = await Promise.all([
-        request({ url: '/api/user/catches?size=1' }),
-        request({ url: '/api/user/favorites?size=1' }),
-        request({ url: '/api/user/comments?size=1' }),
-        request({ url: '/api/user/submissions?size=1' })
-      ])
-      this.setData({
-        stats: {
-          catches: (c.pagination && c.pagination.total) || 0,
-          favorites: (f.pagination && f.pagination.total) || 0,
-          comments: (m.pagination && m.pagination.total) || 0,
-          submissions: (s.pagination && s.pagination.total) || 0
-        }
-      })
-    } catch (e) {
-      // 未登录或网络异常：忽略统计，菜单仍可用
-    }
-  },
-
+  // ---------- 登录/发布/编辑 ----------
   goLogin() {
     wx.navigateTo({ url: '/pages/login/login' })
-  },
-
-  goList(e) {
-    if (!isLoggedIn()) { this.goLogin(); return }
-    const type = e.currentTarget.dataset.type
-    wx.navigateTo({ url: '/pages/my-list/my-list?type=' + type })
   },
 
   goPublish(e) {
@@ -219,8 +188,7 @@ Page({
             isLoggedIn: false,
             userInfo: null,
             avatar: '',
-            displayName: '',
-            stats: { catches: 0, favorites: 0, comments: 0, submissions: 0 }
+            displayName: ''
           })
           wx.showToast({ title: '已退出登录', icon: 'success' })
         }
