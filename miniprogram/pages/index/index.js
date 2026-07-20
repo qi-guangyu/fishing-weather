@@ -227,7 +227,7 @@ Page({
 
   // ==================== 城市选择（优化：分组 + 拼音搜索 + 最近选择） ====================
   showCityPicker() {
-    const recent = wx.getStorageSync('recent_cities') || []
+    const recent = (wx.getStorageSync('recent_cities') || []).filter(c => c !== this.data.currentCity)
     this.setData({
       showCityPicker: true,
       searching: false,

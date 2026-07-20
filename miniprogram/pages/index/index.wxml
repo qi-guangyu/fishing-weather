@@ -154,7 +154,7 @@
                 <view class="city-chip current" wx:if="{{currentCityName}}" data-city="{{currentCityName}}" bindtap="selectCity">
                   {{currentCityName}}<text class="chip-tag">当前</text>
                 </view>
-                <view class="city-chip" wx:for="{{recentCities}}" wx:key="*this" wx:if="{{item !== currentCityName}}" data-city="{{item}}" bindtap="selectCity">{{item}}</view>
+                <view class="city-chip" wx:for="{{recentCities}}" wx:key="*this" data-city="{{item}}" bindtap="selectCity">{{item}}</view>
               </view>
             </view>
 
