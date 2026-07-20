@@ -76,14 +76,14 @@
   <view style="height:40rpx"></view>
 
   <!-- 城市选择弹窗 -->
-  <view class="modal-overlay {{showCityPicker ? 'show' : ''}}" bindtap="hideCityPicker">
-    <view class="modal-panel" catchtap="">
+  <view class="modal-overlay" wx:if="{{showCityPicker}}" bindtap="hideCityPicker">
+    <view class="modal-panel animate-in" catchtap="">
       <view class="modal-header">
         <text class="modal-title">切换城市</text>
         <view class="modal-close" bindtap="hideCityPicker">✕</view>
       </view>
       <view class="modal-body">
-        <input class="city-search-input" placeholder="搜索城市名称..." value="{{citySearchKey}}" bindinput="onCitySearch" />
+        <input class="city-search-input" placeholder="搜索城市名称..." value="{{citySearchKey}}" bindinput="onCitySearch" always-embed adjust-position="{{true}}" />
         <scroll-view scroll-y class="city-results">
           <view class="city-result-item" wx:for="{{cityList}}" wx:key="name" data-city="{{item.name}}" bindtap="selectCity">
             <text class="city-name">{{item.name}}</text>

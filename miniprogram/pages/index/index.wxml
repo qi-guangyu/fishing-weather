@@ -135,14 +135,14 @@
   <view style="height:40rpx"></view>
 
   <!-- 城市选择弹窗（优化：搜索 + 快捷 + 按省分组） -->
-  <view class="modal-overlay {{showCityPicker ? 'show' : ''}}" bindtap="hideCityPicker">
-    <view class="modal-panel" catchtap="">
+  <view class="modal-overlay" wx:if="{{showCityPicker}}" bindtap="hideCityPicker">
+    <view class="modal-panel animate-in" catchtap="">
       <view class="modal-header">
         <text class="modal-title">切换城市</text>
         <view class="modal-close" bindtap="hideCityPicker">✕</view>
       </view>
       <view class="modal-body">
-        <input class="city-search-input" placeholder="搜索城市 / 拼音（如 cs、shanghai）" value="{{citySearchKey}}" bindinput="onCitySearch" confirm-type="search" />
+        <input class="city-search-input" placeholder="搜索城市 / 拼音（如 cs、shanghai）" value="{{citySearchKey}}" bindinput="onCitySearch" confirm-type="search" always-embed adjust-position="{{true}}" />
 
         <scroll-view scroll-y class="city-results">
           <!-- 浏览态：快捷 + 分组 -->
